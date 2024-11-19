@@ -1,0 +1,2 @@
+class_name CPU
+extends Node2D
