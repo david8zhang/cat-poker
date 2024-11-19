@@ -3,6 +3,9 @@ extends Node2D
 
 var deck = []
 
+@onready var player = $Player as CardPlayer
+@onready var cpu = $CPU as CardPlayer
+
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "A"]
 const SUITS = ["diamonds", "spades", "hearts", "clubs"]
 
@@ -20,6 +23,9 @@ func _ready():
 	# shuffle deck
 	deck.shuffle()
 
+	#deal cards
+	player.get_cards(deal(2))
+	cpu.get_cards(deal(2))
 	
 func deal(num_cards: int):
 	var cards = []
