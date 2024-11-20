@@ -5,7 +5,11 @@ extends Node2D
 
 var suit
 var rank
+var back_texture
+var front_texture
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
+	sprite.texture = load("res://sprites/cards/card_back.png")
+
+func show_card():
+	sprite.texture = load("res://sprites/cards/card_" + str(suit) + "_" + str(rank) + ".png")

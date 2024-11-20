@@ -7,6 +7,8 @@
 [node name="Game" type="Node2D"]
 script = ExtResource("1_ddqca")
 
+[node name="Camera2D" type="Camera2D" parent="."]
+
 [node name="Player" parent="." instance=ExtResource("2_5ghjy")]
 
 [node name="CPU" parent="." instance=ExtResource("3_nuusr")]
