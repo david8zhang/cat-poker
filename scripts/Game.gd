@@ -13,6 +13,7 @@ enum GAME_PHASE {
 
 @onready var player = $Player as CardPlayer
 @onready var cpu = $CPU as CardPlayer
+@export var card_scene: PackedScene
 
 const RANKS = ["02", "03", "04", "05", "06", "07", "08", "09", "10", "J", "Q", "A"]
 const SUITS = ["diamonds", "spades", "hearts", "clubs"]
@@ -38,11 +39,26 @@ func _ready():
 	#deal cards
 	player.get_cards(deal(2))
 	cpu.get_cards(deal(2))
-
 	player.display_hand()
+
+	# Flop
+	deal_flop()
 	
 func deal(num_cards: int):
 	var cards = []
 	for i in range(0, num_cards):
 		cards.append(deck.pop_front())
 	return cards
+
+func deal_flop():
+	var card_pos = Vector2(0, 0)
+	var flop_cards = deal(3)
+	for c in flop_cards:
+		var card = card_scene.instantiate() as Card
+		card.rank = c.rank
+		card.suit = c.suit
+		card.global_position = card_pos
+		communal_cards.append(card)
+		add_child(card)
+		card_pos.x += card.sprite.texture.get_width() * 1.5
+		card.show_card()

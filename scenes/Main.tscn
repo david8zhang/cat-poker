@@ -1,11 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://ceesvpsrqfvfu"]
+[gd_scene load_steps=5 format=3 uid="uid://ceesvpsrqfvfu"]
 
 [ext_resource type="Script" path="res://scripts/Game.gd" id="1_ddqca"]
 [ext_resource type="PackedScene" uid="uid://xs87hn7rxkh5" path="res://prefabs/Player.tscn" id="2_5ghjy"]
+[ext_resource type="PackedScene" uid="uid://c60wlqcbrkrbo" path="res://prefabs/Card.tscn" id="2_bq42j"]
 [ext_resource type="PackedScene" uid="uid://cfv4qj050cb5i" path="res://prefabs/CPU.tscn" id="3_nuusr"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_ddqca")
+card_scene = ExtResource("2_bq42j")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
