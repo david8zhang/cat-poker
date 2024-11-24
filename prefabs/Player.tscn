@@ -1,8 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://xs87hn7rxkh5"]
+[gd_scene load_steps=2 format=3 uid="uid://xs87hn7rxkh5"]
 
-[ext_resource type="Script" path="res://scripts/CardPlayer.gd" id="1_cb2ps"]
-[ext_resource type="PackedScene" uid="uid://c60wlqcbrkrbo" path="res://prefabs/Card.tscn" id="2_h0bao"]
+[ext_resource type="Script" path="res://scripts/PlayerCardPlayer.gd" id="1_sy67i"]
 
 [node name="Player" type="Node2D"]
-script = ExtResource("1_cb2ps")
-card_scene = ExtResource("2_h0bao")
+script = ExtResource("1_sy67i")

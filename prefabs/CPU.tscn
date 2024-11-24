@@ -1,8 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://cfv4qj050cb5i"]
+[gd_scene load_steps=2 format=3 uid="uid://cfv4qj050cb5i"]
 
-[ext_resource type="Script" path="res://scripts/CardPlayer.gd" id="1_sdcjv"]
-[ext_resource type="PackedScene" uid="uid://c60wlqcbrkrbo" path="res://prefabs/Card.tscn" id="2_66qpi"]
+[ext_resource type="Script" path="res://scripts/CPUCardPlayer.gd" id="1_wxyct"]
 
 [node name="CPU" type="Node2D"]
-script = ExtResource("1_sdcjv")
-card_scene = ExtResource("2_66qpi")
+script = ExtResource("1_wxyct")
