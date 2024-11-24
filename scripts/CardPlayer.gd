@@ -23,7 +23,7 @@ func get_cards(cards):
 		add_child(new_card)
 
 		# TODO: Figure out how to center cards
-		curr_pos.x += new_card.sprite.texture.get_width() * 1.5
+		curr_pos.x += new_card.sprite.texture.get_width() * 2
 
 func display_hand():
 	for card in cards_in_hand:

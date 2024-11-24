@@ -32,7 +32,10 @@ var pot = 0
 var curr_player_bet = 0
 var curr_cpu_bet = 0
 var curr_phase = GamePhase.PREFLOP
-var next_card_x_pos = 0
+var next_card_x_pos = -150
+
+var did_player_check = false
+var did_cpu_check = false
 
 func _ready():
 	# connect signals
@@ -83,7 +86,7 @@ func deal_cards_on_table(num_cards):
 		card.global_position = card_pos
 		communal_cards.append(card)
 		add_child(card)
-		next_card_x_pos += card.sprite.texture.get_width() * 1.5
+		next_card_x_pos += card.sprite.texture.get_width() * 2
 		card_pos = Vector2(next_card_x_pos, 0)
 		card.show_card()
 
@@ -102,31 +105,6 @@ func process_next_action(next_side_to_act):
 	if self.side_to_act == Game.Side.PLAYER:
 		player_action_buttons.show()
 
-func on_bet(side: Game.Side, amount):
-	# pot_label.text = "$" + str(pot)
-	if side == Game.Side.CPU:
-		curr_cpu_bet = amount
-		# CPU raise or
-		if curr_cpu_bet > curr_player_bet or amount == 0:
-			process_next_action(Game.Side.PLAYER)
-		# CPU call
-		elif curr_cpu_bet == curr_player_bet:
-			var callable = Callable(self, "go_to_next_phase")
-			delay_action(callable, 2)
-
-	else:
-		curr_player_bet = amount
-		# Player raise or check
-		if curr_player_bet > curr_cpu_bet or amount == 0:
-			process_next_action(Game.Side.CPU)
-		# Player call
-		elif curr_player_bet == curr_cpu_bet:
-			var callable = Callable(self, "go_to_next_phase")
-			delay_action(callable, 2)
-
-	# Update the pot
-	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
-
 
 func delay_action(callable, time):
 	var timer = Timer.new()
@@ -137,10 +115,42 @@ func delay_action(callable, time):
 	add_child(timer)
 
 func on_player_bet(amount):
-	on_bet(Game.Side.PLAYER, amount)
+	curr_player_bet = amount
+	# Player check
+	if amount == 0:
+		if did_cpu_check:
+			go_to_next_phase_with_delay(2)
+		else:
+			did_player_check = true
+			process_next_action(Game.Side.CPU)
+	# Player raise
+	if curr_player_bet > curr_cpu_bet:
+		process_next_action(Game.Side.CPU)
+	# Player call
+	elif curr_player_bet == curr_cpu_bet:
+		go_to_next_phase_with_delay(2)
+	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
 
 func on_cpu_bet(amount):
-	on_bet(Game.Side.CPU, amount)
+	curr_cpu_bet = amount
+	# CPU check
+	if amount == 0:
+		if did_player_check:
+			go_to_next_phase_with_delay(2)
+		else:
+			did_cpu_check = true
+			process_next_action(Game.Side.PLAYER)
+	# CPU raise
+	elif curr_cpu_bet > curr_player_bet:
+		process_next_action(Game.Side.PLAYER)
+	# CPU call
+	elif curr_cpu_bet == curr_player_bet:
+		go_to_next_phase_with_delay(2)
+	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
+
+func go_to_next_phase_with_delay(delay: int):
+	var callable = Callable(self, "go_to_next_phase")
+	delay_action(callable, delay)
 
 func go_to_next_phase():
 	pot += curr_player_bet + curr_cpu_bet
@@ -160,7 +170,6 @@ func go_to_next_phase():
 		process_next_action(Side.PLAYER)
 
 func handle_cpu_action():
-	print("Went here!")
 	if curr_player_bet == 0:
 		cpu.check()
 	else:
