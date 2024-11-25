@@ -73,6 +73,20 @@ class Hand:
 	var hand_type: HandTypes
 	var cards
 
+class CardComparator:
+	func compare(a: Card, b: Card) -> int:
+		return RANKS.find(a.rank) - RANKS.find(b.rank)
+
+class WheelCardComparator:
+	func compare(a: Card, b: Card) -> int:
+		var a_rank = RANKS.find(a.rank)
+		var b_rank = RANKS.find(b.rank)
+		if a.rank == "A":
+			a_rank = -1
+		if b.rank == "A":
+			b_rank = -1
+		return a_rank - b_rank
+
 func _ready():
 	# connect signals
 	player.bet.connect(on_player_bet)
@@ -105,6 +119,45 @@ func _ready():
 	cpu.get_cards(draw_cards_from_deck(2))
 	player.display_hand()
 	process_next_action(Side.PLAYER)
+
+	var tp1 = [
+		generate_card("05", "spades"),
+		generate_card("05", "spades"),
+		generate_card("02", "spades"),
+		generate_card("02", "spades"),
+		generate_card("A", "spades")
+	]
+
+	var tp2 = [
+		generate_card("06", "spades"),
+		generate_card("06", "spades"),
+		generate_card("02", "spades"),
+		generate_card("02", "spades"),
+		generate_card("A", "spades")
+	]
+
+	print(compare_two_pair(tp2, tp1) == 1)
+
+	var tp3 = [
+		generate_card("05", "spades"),
+		generate_card("05", "spades"),
+		generate_card("03", "spades"),
+		generate_card("03", "spades"),
+		generate_card("A", "spades")
+	]
+
+	print(compare_two_pair(tp3, tp1) == 1)
+
+	var tp4 = [
+		generate_card("05", "spades"),
+		generate_card("05", "spades"),
+		generate_card("03", "spades"),
+		generate_card("03", "spades"),
+		generate_card("K", "spades")
+	]
+
+	print(compare_two_pair(tp3, tp4) == 1)
+
 
 func generate_card(rank, suit):
 	return { "rank": rank, "suit": suit }
@@ -274,19 +327,74 @@ func compare_hands(hand1: Hand, hand2: Hand):
 	elif hand1_type < hand2_type:
 		return -1
 	else:
-		# If pair, 2-pair, three of a kind, or 4 of a kind, compare highest card in the set. Otherwise, compare highest card outside of set
-		var set_types = [HandTypes.PAIR, HandTypes.TWO_PAIR, HandTypes.THREE_OF_A_KIND, HandTypes.FOUR_OF_A_KIND]
+		# -------------------- TIEBREAKER LOGIC --------------------
+		# If pair, three of a kind, or 4 of a kind, compare highest set rank. (If full house, compare the pair if the 3ok is the same)
+		var set_types = [HandTypes.PAIR, HandTypes.THREE_OF_A_KIND, HandTypes.FOUR_OF_A_KIND, HandTypes.FULL_HOUSE]
 		if set_types.has(hand1_type):
-			pass
+			return compare_sets(hand1.cards, hand2.cards)
+		# If two pair, compare the highest ranked pair. If same, compare lower ranked pair. If still same, compare highest card outside of set
+		elif hand1_type == HandTypes.TWO_PAIR:
+			return compare_two_pair(hand1.cards, hand2.cards)
+		# Otherwise, we just look at the highest card in the hand (flushes/straights comprise all cards in hand)
 		else:
-			var highest_hand1_card = get_highest_card(hand1.cards)
-			var highest_hand2_card = get_highest_card(hand2.cards)
-			if highest_hand1_card > highest_hand2_card:
-				return 1
-			elif highest_hand2_card > highest_hand1_card:
-				return -1
-			else:
-				return 0
+			return compare_high_card(hand1.cards, hand2.cards)
+
+func compare_high_card(hand1, hand2):
+	var highest_hand1_card = get_highest_card(hand1)
+	var highest_hand2_card = get_highest_card(hand2)
+	if highest_hand1_card > highest_hand2_card:
+		return 1
+	elif highest_hand2_card > highest_hand1_card:
+		return -1
+	else:
+		return 0
+
+func compare_two_pair(hand1, hand2):
+	var hand1_mapping = get_rank_mapping(hand1)["mapping"]
+	var hand2_mapping = get_rank_mapping(hand2)["mapping"]
+	var high_pair1 = _get_highest_rank_in_set(hand1_mapping, 2)
+	var high_pair2 = _get_highest_rank_in_set(hand2_mapping, 2)
+	if high_pair1 > high_pair2:
+		return 1
+	elif high_pair1 < high_pair2:
+		return -1
+	else:
+		var low_pair1 = _get_lowest_rank_in_set(hand1_mapping, 2)
+		var low_pair2 = _get_lowest_rank_in_set(hand2_mapping, 2)
+		if low_pair1 > low_pair2:
+			return 1
+		elif low_pair1 < low_pair2:
+			return -1
+		else:
+			return compare_high_card(hand1, hand2)
+
+func compare_sets(hand1, hand2):
+	var hand1_rank_mapping = get_rank_mapping(hand1)["mapping"]
+	var hand2_rank_mapping = get_rank_mapping(hand2)["mapping"]
+	for i in range(0, 4):
+		# Check all 4 of a kind, 3 of a kind, pair, down to high card
+		var set_type_to_check = 4 - i
+		var sum_of_ranks1 = _get_highest_rank_in_set(hand1_rank_mapping, set_type_to_check)
+		var sum_of_ranks2 = _get_highest_rank_in_set(hand2_rank_mapping, set_type_to_check)
+		if sum_of_ranks1 > sum_of_ranks2:
+			return 1
+		elif sum_of_ranks1 < sum_of_ranks2:
+			return -1
+	return 0
+
+func _get_highest_rank_in_set(hand_rank_mapping, set_type_to_check):
+	var highest_rank_in_set = 0
+	for key in hand_rank_mapping.keys():
+		if hand_rank_mapping[key] == set_type_to_check:
+			highest_rank_in_set = max(highest_rank_in_set, RANKS.find(key))
+	return highest_rank_in_set
+
+func _get_lowest_rank_in_set(hand_rank_mapping, set_type_to_check):
+	var lowest_rank_in_set = INF
+	for key in hand_rank_mapping.keys():
+		if hand_rank_mapping[key] == set_type_to_check:
+			lowest_rank_in_set = min(lowest_rank_in_set, RANKS.find(key))
+	return lowest_rank_in_set
 
 func get_highest_card(cards):
 	var highest_rank = 0
