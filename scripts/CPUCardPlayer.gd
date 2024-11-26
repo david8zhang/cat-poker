@@ -9,3 +9,8 @@ func call_bet():
 func blind_bet(amount):
 	curr_bankroll -= amount
 	game.blind_bet(amount, Game.Side.CPU)
+
+func make_bet(amount):
+	var amount_added = amount - game.curr_cpu_bet
+	curr_bankroll -= amount_added
+	bet.emit(amount)

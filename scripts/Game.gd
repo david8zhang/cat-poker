@@ -14,7 +14,9 @@ enum GamePhase {
 
 enum Side {
 	PLAYER,
-	CPU
+	CPU,
+	BOTH,
+	NONE
 }
 
 enum HandTypes {
@@ -68,6 +70,7 @@ var next_card_x_pos = -150
 
 var did_player_check = false
 var did_cpu_check = false
+var winning_side: Game.Side = Side.NONE
 
 class Hand:
 	var hand_type: HandTypes
@@ -93,7 +96,15 @@ func _ready():
 	cpu.bet.connect(on_cpu_bet)
 	showdown_next_button.button_up.connect(go_to_new_game)
 
-	# Initialize deck
+	# Initialize players
+	player.global_position = Vector2(0, 200)
+	cpu.global_position = Vector2(0, -200)
+
+	init_game()
+	process_next_action(Side.PLAYER)
+
+
+func init_game():
 	for i in range(0, RANKS.size()):
 		for j in range(0, SUITS.size()):
 			var rank = RANKS[i]
@@ -102,14 +113,8 @@ func _ready():
 				"rank": rank,
 				"suit": suit
 			})
-
-	# Initialize players
-	player.global_position = Vector2(0, 200)
-	cpu.global_position = Vector2(0, -200)
-
-	# shuffle deck
 	deck.shuffle()
-
+	
 	# Place blind bets
 	player.blind_bet(1)
 	cpu.blind_bet(2)
@@ -118,45 +123,6 @@ func _ready():
 	player.get_cards(draw_cards_from_deck(2))
 	cpu.get_cards(draw_cards_from_deck(2))
 	player.display_hand()
-	process_next_action(Side.PLAYER)
-
-	var tp1 = [
-		generate_card("05", "spades"),
-		generate_card("05", "spades"),
-		generate_card("02", "spades"),
-		generate_card("02", "spades"),
-		generate_card("A", "spades")
-	]
-
-	var tp2 = [
-		generate_card("06", "spades"),
-		generate_card("06", "spades"),
-		generate_card("02", "spades"),
-		generate_card("02", "spades"),
-		generate_card("A", "spades")
-	]
-
-	print(compare_two_pair(tp2, tp1) == 1)
-
-	var tp3 = [
-		generate_card("05", "spades"),
-		generate_card("05", "spades"),
-		generate_card("03", "spades"),
-		generate_card("03", "spades"),
-		generate_card("A", "spades")
-	]
-
-	print(compare_two_pair(tp3, tp1) == 1)
-
-	var tp4 = [
-		generate_card("05", "spades"),
-		generate_card("05", "spades"),
-		generate_card("03", "spades"),
-		generate_card("03", "spades"),
-		generate_card("K", "spades")
-	]
-
-	print(compare_two_pair(tp3, tp4) == 1)
 
 
 func generate_card(rank, suit):
@@ -214,12 +180,13 @@ func on_player_bet(amount):
 		else:
 			did_player_check = true
 			process_next_action(Game.Side.CPU)
-	# Player raise
-	if curr_player_bet > curr_cpu_bet:
-		process_next_action(Game.Side.CPU)
-	# Player call
-	elif curr_player_bet == curr_cpu_bet:
-		go_to_next_phase_with_delay(2)
+	else:
+		# Player raise
+		if curr_player_bet > curr_cpu_bet:
+			process_next_action(Game.Side.CPU)
+		# Player call
+		elif curr_player_bet == curr_cpu_bet:
+			go_to_next_phase_with_delay(2)
 	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 
@@ -249,22 +216,23 @@ func go_to_next_phase():
 	pot += curr_player_bet + curr_cpu_bet
 	curr_player_bet = 0
 	curr_cpu_bet = 0
-	if curr_phase == GamePhase.PREFLOP:
-		deal_cards_on_table(3)
-		curr_phase = GamePhase.FLOP
-		process_next_action(Side.PLAYER)
-	elif curr_phase == GamePhase.FLOP:
-		deal_cards_on_table(1)
-		curr_phase = GamePhase.TURN
-		process_next_action(Side.PLAYER)
-	elif curr_phase == GamePhase.TURN:
-		deal_cards_on_table(1)
-		curr_phase = GamePhase.RIVER
-		process_next_action(Side.PLAYER)
-	elif curr_phase == GamePhase.RIVER:
-		cpu.display_hand()
-		curr_phase = GamePhase.SHOWDOWN
-		check_winner()
+	match curr_phase:
+		GamePhase.PREFLOP:
+			deal_cards_on_table(3)
+			curr_phase = GamePhase.FLOP
+			process_next_action(Side.PLAYER)
+		GamePhase.FLOP:
+			deal_cards_on_table(1)
+			curr_phase = GamePhase.TURN
+			process_next_action(Side.PLAYER)
+		GamePhase.TURN:
+			deal_cards_on_table(1)
+			curr_phase = GamePhase.RIVER
+			process_next_action(Side.PLAYER)
+		GamePhase.RIVER:
+			cpu.display_hand()
+			curr_phase = GamePhase.SHOWDOWN
+			check_winner()
 
 func handle_cpu_action():
 	if curr_player_bet == 0:
@@ -282,7 +250,36 @@ func blind_bet(amount, side: Game.Side):
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 
 func go_to_new_game():
-	pass
+	if winning_side == Side.PLAYER:
+		player.curr_bankroll += pot
+	elif winning_side == Side.CPU:
+		cpu.curr_bankroll += pot
+	else:
+		player.curr_bankroll += round(pot / 2)
+		cpu.curr_bankroll += round(pot / 2)
+	pot = 0
+	pot_label.text = "$0"
+	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
+	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
+	showdown_result.hide()
+
+	# reset game state
+	for c in player.cards_in_hand:
+		c.queue_free()
+	for c in cpu.cards_in_hand:
+		c.queue_free()
+	for c in curr_community_cards:
+		c.queue_free()
+	curr_community_cards = []
+	player.cards_in_hand = []
+	cpu.cards_in_hand = []
+	curr_player_bet = 0
+	curr_cpu_bet = 0
+	curr_phase = GamePhase.PREFLOP
+	deck = []
+	next_card_x_pos = -150 # For positioning flop cards at the middle of the table (fix this later)
+	init_game()
+	process_next_action(Side.PLAYER)
 
 func check_winner():
 	showdown_result.show()
@@ -291,10 +288,13 @@ func check_winner():
 	var compare_result = compare_hands(player_hand, cpu_hand)
 	if compare_result == 1:
 		showdown_win_label.text = "Player Wins!\nHand: " + hand_type_names[player_hand.hand_type] + "\nWinnings: $" + str(pot)
+		winning_side = Side.PLAYER
 	elif compare_result == -1:
 		showdown_win_label.text = "CPU Wins!\nHand: " + hand_type_names[cpu_hand.hand_type]
+		winning_side = Side.CPU
 	else:
 		showdown_win_label.text = "Tie!\nWinnings:" + str(pot / 2)
+		winning_side = Side.BOTH
 
 # Get the best hand between hole cards and community cards
 func get_best_hand_comm_cards(player_cards, community_cards):

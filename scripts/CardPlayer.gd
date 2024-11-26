@@ -30,8 +30,7 @@ func display_hand():
 		card.show_card()
 
 func make_bet(amount):
-	curr_bankroll -= amount
-	bet.emit(amount)
+	pass
 
 func check():
 	make_bet(0)
