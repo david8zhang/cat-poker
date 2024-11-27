@@ -43,13 +43,15 @@ var hand_type_names = [
 	"Straight Flush"
 ]
 
-@onready var player = $Player as CardPlayer
-@onready var cpu = $CPU as CardPlayer
+@onready var player = $Player as PlayerCardPlayer
+@onready var cpu = $CPU as CPUCardPlayer
 @onready var pot_label = get_node("/root/Game/CanvasLayer/PotLabel") as Label
 @onready var player_action_buttons = get_node("/root/Game/CanvasLayer/PlayerActionButtons") as HBoxContainer
 @onready var turn_to_bet_label = get_node("/root/Game/CanvasLayer/TurnToBet") as Label
 @onready var player_chip_count = get_node("/root/Game/CanvasLayer/PlayerChips") as Label
 @onready var cpu_chip_count = get_node("/root/Game/CanvasLayer/CPUChips") as Label
+@onready var action_log = get_node("/root/Game/CanvasLayer/ActionLog") as Label
+@onready var cpu_reaction_label = get_node("/root/Game/CanvasLayer/CPUReaction") as Label
 
 # Showdown modal text
 @onready var showdown_result = get_node("/root/Game/CanvasLayer/ShowdownResult") as Control
@@ -57,6 +59,8 @@ var hand_type_names = [
 @onready var showdown_next_button = get_node("/root/Game/CanvasLayer/ShowdownResult/NextButton") as Button
 
 @export var card_scene: PackedScene
+
+signal all_ready
 
 const RANKS = ["02", "03", "04", "05", "06", "07", "08", "09", "10", "J", "Q", "K", "A"]
 const SUITS = ["diamonds", "spades", "hearts", "clubs"]
@@ -95,13 +99,14 @@ func _ready():
 	player.bet.connect(on_player_bet)
 	cpu.bet.connect(on_cpu_bet)
 	showdown_next_button.button_up.connect(go_to_new_game)
+	action_log.hide()
 
 	# Initialize players
 	player.global_position = Vector2(0, 200)
-	cpu.global_position = Vector2(0, -200)
-
+	cpu.global_position = Vector2(0, -150)
 	init_game()
 	process_next_action(Side.PLAYER)
+	all_ready.emit()
 
 
 func init_game():
@@ -124,6 +129,9 @@ func init_game():
 	cpu.get_cards(draw_cards_from_deck(2))
 	player.display_hand()
 
+	# Do CPU initial reaction
+	cpu.react_to_phase()
+
 
 func generate_card(rank, suit):
 	return { "rank": rank, "suit": suit }
@@ -144,7 +152,7 @@ func deal_cards_on_table(num_cards):
 		card.global_position = card_pos
 		curr_community_cards.append(card)
 		add_child(card)
-		next_card_x_pos += card.sprite.texture.get_width() * 2
+		next_card_x_pos += card.sprite.texture.get_width() * card.sprite.scale.x
 		card_pos = Vector2(next_card_x_pos, 0)
 		card.show_card()
 
@@ -172,9 +180,11 @@ func delay_action(callable, time):
 	add_child(timer)
 
 func on_player_bet(amount):
+	action_log.show()
 	curr_player_bet = amount
 	# Player check
 	if amount == 0:
+		action_log.text = "Player checks"
 		if did_cpu_check:
 			go_to_next_phase_with_delay(2)
 		else:
@@ -183,17 +193,21 @@ func on_player_bet(amount):
 	else:
 		# Player raise
 		if curr_player_bet > curr_cpu_bet:
+			action_log.text = "Player raises $" + str(curr_player_bet)
 			process_next_action(Game.Side.CPU)
 		# Player call
 		elif curr_player_bet == curr_cpu_bet:
+			action_log.text = "Player calls $" + str(curr_player_bet)
 			go_to_next_phase_with_delay(2)
 	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 
 func on_cpu_bet(amount):
+	action_log.show()
 	curr_cpu_bet = amount
 	# CPU check
 	if amount == 0:
+		action_log.text = "CPU checks"
 		if did_player_check:
 			go_to_next_phase_with_delay(2)
 		else:
@@ -201,9 +215,11 @@ func on_cpu_bet(amount):
 			process_next_action(Game.Side.PLAYER)
 	# CPU raise
 	elif curr_cpu_bet > curr_player_bet:
+		action_log.text = "CPU raises $" + str(curr_cpu_bet)
 		process_next_action(Game.Side.PLAYER)
 	# CPU call
 	elif curr_cpu_bet == curr_player_bet:
+		action_log.text = "CPU calls $" + str(curr_cpu_bet)
 		go_to_next_phase_with_delay(2)
 	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
@@ -213,6 +229,7 @@ func go_to_next_phase_with_delay(delay: int):
 	delay_action(callable, delay)
 
 func go_to_next_phase():
+	action_log.hide()
 	pot += curr_player_bet + curr_cpu_bet
 	curr_player_bet = 0
 	curr_cpu_bet = 0
@@ -233,6 +250,7 @@ func go_to_next_phase():
 			cpu.display_hand()
 			curr_phase = GamePhase.SHOWDOWN
 			check_winner()
+	cpu.react_to_phase()
 
 func handle_cpu_action():
 	if curr_player_bet == 0:
@@ -262,6 +280,7 @@ func go_to_new_game():
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 	showdown_result.hide()
+	action_log.hide()
 
 	# reset game state
 	for c in player.cards_in_hand:
@@ -506,3 +525,13 @@ func _combination_helper(arr: Array, combination_size: int, start: int, current:
 		current.append(arr[i])
 		_combination_helper(arr, combination_size, i + 1, current, result)
 		current.pop_back()
+
+func fold(side: Game.Side):
+	pot += curr_player_bet + curr_cpu_bet
+	showdown_result.show()
+	if side == Game.Side.PLAYER:
+		showdown_win_label.text = "CPU Wins!"
+		winning_side = Side.CPU
+	elif side == Game.Side.CPU:
+		showdown_win_label.text = "Player wins!"
+		winning_side = Side.PLAYER

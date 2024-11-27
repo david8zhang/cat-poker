@@ -91,6 +91,33 @@ offset_bottom = 52.0
 text = "CPU: $0
 "
 
+[node name="ActionLog" type="Label" parent="CanvasLayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -154.0
+offset_top = -26.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Player checks"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CPUReaction" type="Label" parent="CanvasLayer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -77.0
+offset_top = 38.0
+offset_right = 77.0
+offset_bottom = 64.0
+grow_horizontal = 2
+text = "Reaction: Angry"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="ShowdownResult" type="Control" parent="CanvasLayer"]
 visible = false
 layout_mode = 3
