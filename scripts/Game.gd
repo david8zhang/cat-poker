@@ -102,8 +102,8 @@ func _ready():
 	action_log.hide()
 
 	# Initialize players
-	player.global_position = Vector2(0, 200)
-	cpu.global_position = Vector2(0, -150)
+	player.global_position = Vector2(0, 300)
+	cpu.global_position = Vector2(0, 0)
 	init_game()
 	process_next_action(Side.PLAYER)
 	all_ready.emit()
@@ -143,7 +143,8 @@ func draw_cards_from_deck(num_cards: int):
 	return cards
 
 func deal_cards_on_table(num_cards):
-	var card_pos = Vector2(next_card_x_pos, 0)
+	var card_pos_y = 175
+	var card_pos = Vector2(next_card_x_pos, card_pos_y)
 	var flop_cards = draw_cards_from_deck(num_cards)
 	for c in flop_cards:
 		var card = card_scene.instantiate() as Card
@@ -153,7 +154,7 @@ func deal_cards_on_table(num_cards):
 		curr_community_cards.append(card)
 		add_child(card)
 		next_card_x_pos += card.sprite.texture.get_width() * card.sprite.scale.x
-		card_pos = Vector2(next_card_x_pos, 0)
+		card_pos = Vector2(next_card_x_pos, card_pos_y)
 		card.show_card()
 
 func process_next_action(next_side_to_act):

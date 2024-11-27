@@ -1,6 +1,18 @@
-[gd_scene load_steps=2 format=3 uid="uid://cfv4qj050cb5i"]
+[gd_scene load_steps=5 format=3 uid="uid://cfv4qj050cb5i"]
 
 [ext_resource type="Script" path="res://scripts/CPUCardPlayer.gd" id="1_wxyct"]
+[ext_resource type="Texture2D" uid="uid://cvkyfb011kf6n" path="res://sprites/face_reactions/face_neutral.png" id="2_apuyw"]
+[ext_resource type="Texture2D" uid="uid://cpti6tolcpbh6" path="res://sprites/tail_reactions/easy/tail_neutral.png" id="2_bii2s"]
+[ext_resource type="Texture2D" uid="uid://b3gpb17px5nsu" path="res://sprites/face_reactions/body.png" id="3_cl2bx"]
 
 [node name="CPU" type="Node2D"]
 script = ExtResource("1_wxyct")
+
+[node name="Tail" type="Sprite2D" parent="."]
+texture = ExtResource("2_bii2s")
+
+[node name="Body" type="Sprite2D" parent="."]
+texture = ExtResource("3_cl2bx")
+
+[node name="Face" type="Sprite2D" parent="."]
+texture = ExtResource("2_apuyw")

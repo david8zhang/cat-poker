@@ -57,24 +57,6 @@ func _ready():
 
 func all_ready():
 	update_curr_reaction()
-	var hand1 = [
-		game.generate_card("02", "spades"),
-		game.generate_card("03", "clubs"),
-		game.generate_card("05", "hearts"),
-		game.generate_card("02", "diamonds"),
-		game.generate_card("06", "clubs")
-	]
-
-	var hand2 = [
-		game.generate_card("A", "spades"),
-		game.generate_card("02", "clubs"),
-		game.generate_card("05", "diamonds"),
-		game.generate_card("04", "hearts"),
-		game.generate_card("04", "spades")
-	]
-
-	print(is_straight_draw(hand1))
-	print(is_straight_draw(hand2))
 
 func update_curr_reaction():
 	var cpu_reaction_label = game.cpu_reaction_label
