@@ -65,6 +65,11 @@ var hand_type_names = [
 @onready var showdown_win_label = get_node("/root/Game/CanvasLayer/ShowdownResult/WinLabel") as Label
 @onready var showdown_next_button = get_node("/root/Game/CanvasLayer/ShowdownResult/NextButton") as Button
 
+# Game Over modal
+@onready var game_over_modal = get_node("/root/Game/CanvasLayer/GameOverModal") as Control
+@onready var game_over_label = get_node("/root/Game/CanvasLayer/GameOverModal/WinLabel") as Label
+@onready var game_over_restart_button = get_node("/root/Game/CanvasLayer/GameOverModal/PlayAgainButton") as Button
+
 @export var card_scene: PackedScene
 
 signal all_ready
@@ -83,7 +88,7 @@ var did_player_check = false
 var did_cpu_check = false
 var is_player_all_in = false
 var is_cpu_all_in = false
-var winning_side: Game.Side = Side.NONE
+var hand_winner: Game.Side = Side.NONE
 
 class Hand:
 	var hand_type: HandTypes
@@ -107,7 +112,8 @@ func _ready():
 	# connect signals
 	player.bet.connect(on_player_bet)
 	cpu.bet.connect(on_cpu_bet)
-	showdown_next_button.button_up.connect(go_to_new_game)
+	showdown_next_button.button_up.connect(start_new_hand)
+	game_over_restart_button.pressed.connect(new_game)
 	action_log.hide()
 
 	# Initialize players
@@ -280,14 +286,32 @@ func blind_bet(amount, side: Game.Side):
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 
-func go_to_new_game():
-	if winning_side == Side.PLAYER:
+func show_gameover_modal(winner):
+	game_over_modal.show()
+	showdown_win_label.text = "Player Wins!" if winner == Side.PLAYER else "CPU Wins!"
+
+func start_new_hand():
+	if hand_winner == Side.PLAYER:
 		player.curr_bankroll += pot
-	elif winning_side == Side.CPU:
+	elif hand_winner == Side.CPU:
 		cpu.curr_bankroll += pot
 	else:
 		player.curr_bankroll += round(pot / 2)
 		cpu.curr_bankroll += round(pot / 2)
+	# If player or CPU has a 0 bankroll after previous round winnings, game is over
+	if player.curr_bankroll == 0:
+		show_gameover_modal(Side.CPU)
+	elif cpu.curr_bankroll == 0:
+		show_gameover_modal(Side.PLAYER)
+	reset_game_state()
+
+func new_game():
+	game_over_modal.hide()
+	player.curr_bankroll = CardPlayer.STARTING_BANKROLL
+	cpu.curr_bankroll = CardPlayer.STARTING_BANKROLL
+	reset_game_state()
+
+func reset_game_state():
 	pot = 0
 	pot_label.text = "$0"
 	is_player_all_in = false
@@ -296,8 +320,6 @@ func go_to_new_game():
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 	showdown_result.hide()
 	action_log.hide()
-
-	# reset game state
 	for c in player.cards_in_hand:
 		c.queue_free()
 	for c in cpu.cards_in_hand:
@@ -322,13 +344,13 @@ func check_winner():
 	var compare_result = compare_hands(player_hand, cpu_hand)
 	if compare_result == 1:
 		showdown_win_label.text = "Player Wins!\nHand: " + hand_type_names[player_hand.hand_type] + "\nWinnings: $" + str(pot)
-		winning_side = Side.PLAYER
+		hand_winner = Side.PLAYER
 	elif compare_result == -1:
 		showdown_win_label.text = "CPU Wins!\nHand: " + hand_type_names[cpu_hand.hand_type]
-		winning_side = Side.CPU
+		hand_winner = Side.CPU
 	else:
 		showdown_win_label.text = "Tie!\nWinnings:" + str(pot / 2)
-		winning_side = Side.BOTH
+		hand_winner = Side.BOTH
 
 # Get the best hand between hole cards and community cards
 func get_best_hand_comm_cards(player_cards, community_cards):
@@ -546,7 +568,7 @@ func fold(side: Game.Side):
 	showdown_result.show()
 	if side == Game.Side.PLAYER:
 		showdown_win_label.text = "Player folded...\nCPU Wins!"
-		winning_side = Side.CPU
+		hand_winner = Side.CPU
 	elif side == Game.Side.CPU:
 		showdown_win_label.text = "CPU folded...\nPlayer wins!"
-		winning_side = Side.PLAYER
+		hand_winner = Side.PLAYER
