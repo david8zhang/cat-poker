@@ -12,27 +12,26 @@ func _on_call_pressed():
 		call_bet()
 
 func _on_small_raise_pressed():
-	make_bet(game.curr_cpu_bet + SMALL_RAISE_AMOUNT)
+	var amount_to_call = 0
+	if game.curr_cpu_bet > game.curr_player_bet:
+		amount_to_call = game.curr_cpu_bet - game.curr_player_bet
+	make_bet(amount_to_call + SMALL_RAISE_AMOUNT, Game.BetType.RAISE)
 
 func _on_big_raise_pressed():
-	make_bet(game.curr_cpu_bet + BIG_RAISE_AMOUNT)
+	var amount_to_call = 0
+	if game.curr_cpu_bet > game.curr_player_bet:
+		amount_to_call = game.curr_cpu_bet - game.curr_player_bet
+	make_bet(amount_to_call + BIG_RAISE_AMOUNT, Game.BetType.RAISE)
 
 func _on_all_in_pressed():
-	make_bet(curr_bankroll)
+	make_bet(curr_bankroll, Game.BetType.ALL_IN)
 
 func _on_fold_pressed():
 	game.fold(Game.Side.PLAYER)
 
 func call_bet():
 	var amount_to_call = game.curr_cpu_bet - game.curr_player_bet
-	curr_bankroll -= amount_to_call
-	bet.emit(game.curr_cpu_bet)
-
-func make_bet(amount):
-	amount = min(amount, curr_bankroll)
-	var amount_added = amount - game.curr_player_bet
-	curr_bankroll -= amount_added
-	bet.emit(amount)
+	make_bet(amount_to_call, Game.BetType.CALL)
 
 func blind_bet(amount):
 	curr_bankroll -= amount

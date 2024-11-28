@@ -29,7 +29,7 @@ enum HoleCardType {
 	TRASH
 }
 
-signal bet(amount)
+signal bet(amount, bet_type)
 
 func get_cards(cards):
 	var curr_pos = Vector2(0, 0)
@@ -48,11 +48,13 @@ func display_hand():
 	for card in cards_in_hand:
 		card.show_card()
 
-func make_bet(_amount):
-	pass
+func make_bet(amount, bet_type):
+	amount = min(amount, curr_bankroll)
+	curr_bankroll -= amount
+	bet.emit(amount, bet_type)
 
 func check():
-	make_bet(0)
+	make_bet(0, Game.BetType.CHECK)
 
 func call_bet():
 	pass

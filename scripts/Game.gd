@@ -31,6 +31,13 @@ enum HandTypes {
 	STRAIGHT_FLUSH
 }
 
+enum BetType {
+	CHECK,
+	RAISE,
+	CALL,
+	ALL_IN
+}
+
 var hand_type_names = [
 	"High Card",
 	"Pair",
@@ -74,6 +81,8 @@ var next_card_x_pos = -150
 
 var did_player_check = false
 var did_cpu_check = false
+var is_player_all_in = false
+var is_cpu_all_in = false
 var winning_side: Game.Side = Side.NONE
 
 class Hand:
@@ -132,7 +141,6 @@ func init_game():
 	# Do CPU initial reaction
 	cpu.react_to_phase()
 
-
 func generate_card(rank, suit):
 	return { "rank": rank, "suit": suit }
 
@@ -157,10 +165,13 @@ func deal_cards_on_table(num_cards):
 		card_pos = Vector2(next_card_x_pos, card_pos_y)
 		card.show_card()
 
-func process_next_action(next_side_to_act):
+func process_next_action(next_side_to_act, skip_betting = false):
 	self.side_to_act = next_side_to_act
 	turn_to_bet_label.text = "Turn to Bet: PLAYER" if next_side_to_act == Side.PLAYER else "Turn to Bet: CPU"
-	if self.side_to_act == Game.Side.CPU:
+	if skip_betting:
+		print("skipping bets")
+		go_to_next_phase_with_delay(2)
+	elif self.side_to_act == Game.Side.CPU:
 		player_action_buttons.hide()
 		var timer = Timer.new()
 		timer.autostart = true
@@ -169,7 +180,7 @@ func process_next_action(next_side_to_act):
 		var on_timeout = Callable(self, "handle_cpu_action")
 		timer.connect("timeout", on_timeout)
 		add_child(timer)
-	if self.side_to_act == Game.Side.PLAYER:
+	elif self.side_to_act == Game.Side.PLAYER:
 		player_action_buttons.show()
 
 func delay_action(callable, time):
@@ -180,50 +191,53 @@ func delay_action(callable, time):
 	timer.connect("timeout", callable)
 	add_child(timer)
 
-func on_player_bet(amount):
+func on_player_bet(amount, bet_type):
 	action_log.show()
-	curr_player_bet = amount
-	# Player check
-	if amount == 0:
-		action_log.text = "Player checks"
-		if did_cpu_check:
-			go_to_next_phase_with_delay(2)
-		else:
-			did_player_check = true
-			process_next_action(Game.Side.CPU)
-	else:
-		# Player raise
-		if curr_player_bet > curr_cpu_bet:
-			action_log.text = "Player raises $" + str(curr_player_bet)
-			process_next_action(Game.Side.CPU)
-		# Player call
-		elif curr_player_bet == curr_cpu_bet:
-			action_log.text = "Player calls $" + str(curr_player_bet)
-			go_to_next_phase_with_delay(2)
+	curr_player_bet += amount
 	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
-
-func on_cpu_bet(amount):
-	action_log.show()
-	curr_cpu_bet = amount
-	# CPU check
-	if amount == 0:
-		action_log.text = "CPU checks"
-		if did_player_check:
+	match bet_type:
+		BetType.CHECK:
+			action_log.text = "Player checks"
+			if did_cpu_check:
+				go_to_next_phase_with_delay(2)
+			else:
+				did_player_check = true
+				process_next_action(Game.Side.CPU)
+		BetType.RAISE:
+			action_log.text = "Player raises $" + str(curr_player_bet)
+			process_next_action(Game.Side.CPU)
+		BetType.CALL:
+			action_log.text = "Player calls $" + str(curr_player_bet)
 			go_to_next_phase_with_delay(2)
-		else:
-			did_cpu_check = true
-			process_next_action(Game.Side.PLAYER)
-	# CPU raise
-	elif curr_cpu_bet > curr_player_bet:
-		action_log.text = "CPU raises $" + str(curr_cpu_bet)
-		process_next_action(Game.Side.PLAYER)
-	# CPU call
-	elif curr_cpu_bet == curr_player_bet:
-		action_log.text = "CPU calls $" + str(curr_cpu_bet)
-		go_to_next_phase_with_delay(2)
+		BetType.ALL_IN:
+			action_log.text = "Player All In!"
+			is_player_all_in = true
+			process_next_action(Game.Side.CPU)
+
+func on_cpu_bet(amount, bet_type):
+	action_log.show()
+	curr_cpu_bet += amount
 	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
+	match bet_type:
+		BetType.CHECK:
+			action_log.text = "CPU checks"
+			if did_player_check:
+				go_to_next_phase_with_delay(2)
+			else:
+				did_cpu_check = true
+				process_next_action(Game.Side.PLAYER)
+		BetType.RAISE:
+			action_log.text = "CPU raises $" + str(curr_cpu_bet)
+			process_next_action(Game.Side.PLAYER)
+		BetType.CALL:
+			action_log.text = "CPU calls $" + str(curr_cpu_bet)
+			go_to_next_phase_with_delay(2)
+		BetType.ALL_IN:
+			action_log.text = "CPU All In!"
+			is_cpu_all_in = true
+			process_next_action(Game.Side.PLAYER)
 
 func go_to_next_phase_with_delay(delay: int):
 	var callable = Callable(self, "go_to_next_phase")
@@ -234,19 +248,20 @@ func go_to_next_phase():
 	pot += curr_player_bet + curr_cpu_bet
 	curr_player_bet = 0
 	curr_cpu_bet = 0
+	var is_one_side_all_in = is_player_all_in or is_cpu_all_in
 	match curr_phase:
 		GamePhase.PREFLOP:
 			deal_cards_on_table(3)
 			curr_phase = GamePhase.FLOP
-			process_next_action(Side.PLAYER)
+			process_next_action(Side.PLAYER, is_one_side_all_in)
 		GamePhase.FLOP:
 			deal_cards_on_table(1)
 			curr_phase = GamePhase.TURN
-			process_next_action(Side.PLAYER)
+			process_next_action(Side.PLAYER, is_one_side_all_in)
 		GamePhase.TURN:
 			deal_cards_on_table(1)
 			curr_phase = GamePhase.RIVER
-			process_next_action(Side.PLAYER)
+			process_next_action(Side.PLAYER, is_one_side_all_in)
 		GamePhase.RIVER:
 			cpu.display_hand()
 			curr_phase = GamePhase.SHOWDOWN
@@ -275,6 +290,8 @@ func go_to_new_game():
 		cpu.curr_bankroll += round(pot / 2)
 	pot = 0
 	pot_label.text = "$0"
+	is_player_all_in = false
+	is_cpu_all_in = false
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 	showdown_result.hide()
@@ -528,8 +545,8 @@ func fold(side: Game.Side):
 	pot += curr_player_bet + curr_cpu_bet
 	showdown_result.show()
 	if side == Game.Side.PLAYER:
-		showdown_win_label.text = "CPU Wins!"
+		showdown_win_label.text = "Player folded...\nCPU Wins!"
 		winning_side = Side.CPU
 	elif side == Game.Side.CPU:
-		showdown_win_label.text = "Player wins!"
+		showdown_win_label.text = "CPU folded...\nPlayer wins!"
 		winning_side = Side.PLAYER
