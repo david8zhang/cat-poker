@@ -254,10 +254,7 @@ func go_to_next_phase():
 	cpu.react_to_phase()
 
 func handle_cpu_action():
-	if curr_player_bet == 0:
-		cpu.check()
-	else:
-		cpu.call_bet()
+	cpu.do_action()
 
 func blind_bet(amount, side: Game.Side):
 	if side == Side.PLAYER:
@@ -394,11 +391,11 @@ func compare_sets(hand1, hand2):
 	for i in range(0, 4):
 		# Check all 4 of a kind, 3 of a kind, pair, down to high card
 		var set_type_to_check = 4 - i
-		var sum_of_ranks1 = _get_highest_rank_in_set(hand1_rank_mapping, set_type_to_check)
-		var sum_of_ranks2 = _get_highest_rank_in_set(hand2_rank_mapping, set_type_to_check)
-		if sum_of_ranks1 > sum_of_ranks2:
+		var highest_rank1 = _get_highest_rank_in_set(hand1_rank_mapping, set_type_to_check)
+		var highest_rank2 = _get_highest_rank_in_set(hand2_rank_mapping, set_type_to_check)
+		if highest_rank1 > highest_rank2:
 			return 1
-		elif sum_of_ranks1 < sum_of_ranks2:
+		elif highest_rank1 < highest_rank2:
 			return -1
 	return 0
 

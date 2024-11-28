@@ -48,11 +48,23 @@ size_flags_vertical = 8
 text = "Call
 "
 
-[node name="Raise" type="Button" parent="CanvasLayer/PlayerActionButtons"]
+[node name="Small Raise" type="Button" parent="CanvasLayer/PlayerActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 8
-text = "Raise
+text = "Small Raise"
+
+[node name="Big Raise" type="Button" parent="CanvasLayer/PlayerActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "Big Raise"
+
+[node name="All in" type="Button" parent="CanvasLayer/PlayerActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "All In
 "
 
 [node name="Fold" type="Button" parent="CanvasLayer/PlayerActionButtons"]
@@ -183,5 +195,7 @@ text = "Next
 
 [connection signal="button_up" from="CanvasLayer/PlayerActionButtons/Check" to="Player" method="_on_check_button_up"]
 [connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Call" to="Player" method="_on_call_pressed"]
-[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Raise" to="Player" method="_on_raise_pressed"]
+[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Small Raise" to="Player" method="_on_small_raise_pressed"]
+[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Big Raise" to="Player" method="_on_big_raise_pressed"]
+[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/All in" to="Player" method="_on_all_in_pressed"]
 [connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Fold" to="Player" method="_on_fold_pressed"]

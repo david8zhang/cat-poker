@@ -2,6 +2,9 @@ class_name CardPlayer
 extends Node2D
 
 const STARTING_BANKROLL = 200
+const SMALL_RAISE_AMOUNT = 10
+const BIG_RAISE_AMOUNT = 30
+
 @export var card_scene: PackedScene
 @onready var game = get_node("/root/Game") as Game
 
