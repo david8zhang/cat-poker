@@ -17,6 +17,12 @@ enum TailReactionTypes {
 	NEGATIVE
 }
 
+enum Difficulty {
+	EASY,
+	MEDIUM,
+	HARD
+}
+
 # Hole card classifications
 const STRONG_HOLE_CARD_TYPES = [
 	HoleCardType.POCKET_ACES,
@@ -51,7 +57,11 @@ const DECENT_HAND_TYPES = [
 
 var curr_face_reaction = FaceReactionTypes.NEUTRAL
 var curr_tail_reaction = TailReactionTypes.NEUTRAL
+var curr_difficulty = Difficulty.EASY
 var did_reraise = false
+
+@onready var face_sprite = $Face as Sprite2D
+@onready var tail_sprite = $Tail as Sprite2D
 
 func _ready():
 	game.all_ready.connect(all_ready)
@@ -61,9 +71,12 @@ func all_ready():
 
 func update_curr_reaction():
 	var cpu_reaction_label = game.cpu_reaction_label
-	var neutral_face_reaction_label = get_enum_name(FaceReactionTypes, curr_face_reaction)
-	var neutral_tail_reaction_label = get_enum_name(TailReactionTypes, curr_tail_reaction)
-	cpu_reaction_label.text = "Face: " + neutral_face_reaction_label + "\nTail: " + neutral_tail_reaction_label
+	var face_reaction_label = get_enum_name(FaceReactionTypes, curr_face_reaction).to_lower()
+	var tail_reaction_label = get_enum_name(TailReactionTypes, curr_tail_reaction).to_lower()
+	var difficulty = get_enum_name(Difficulty, curr_difficulty).to_lower()
+	cpu_reaction_label.text = "Face: " + face_reaction_label + "\nTail: " + tail_reaction_label
+	face_sprite.texture = load("res://sprites/face_reactions/" + difficulty + "/" + "face_" + face_reaction_label + ".png")
+	tail_sprite.texture = load("res://sprites/tail_reactions/" + difficulty + "/" + "tail_" + tail_reaction_label + ".png")
 
 func get_enum_name(enum_dict: Dictionary, value: int) -> String:
 	for name_key in enum_dict.keys():
@@ -128,8 +141,10 @@ func react_to_phase():
 				very_positive_react()
 			elif DECENT_HOLE_CARD_TYPES.has(type_of_hole_cards):
 				slightly_positive_react()
-			else:
+			elif type_of_hole_cards == HoleCardType.TRASH:
 				slightly_negative_react()
+			else:
+				neutral_react()
 		Game.GamePhase.FLOP:
 			if is_curr_hand_better_than_community():
 				var best_hand_so_far = get_best_hand_flop().hand_type
@@ -163,39 +178,45 @@ func react_to_phase():
 					slightly_positive_react()
 				elif DECENT_HAND_TYPES.has(best_hand_so_far):
 					slightly_positive_react()
+				elif best_hand_so_far == Game.HandTypes.PAIR:
+					neutral_react()
 				else:
-					very_negative_react()
+					slightly_negative_react()
 			else:
 				neutral_react()
 
 func respond_to_all_in(best_hand, is_pre_flop):
 	print("Responding to player all-in...")
+	var is_call = false
 	if is_pre_flop:
 		var hole_card_type = get_hole_cards_type()
+		var should_fold = false
 		if STRONG_HOLE_CARD_TYPES.has(hole_card_type):
 			# Fold 25% of the time, otherwise call
-			var should_fold = randi_range(0, 3) == 1
-			if should_fold:
-				game.fold(Game.Side.CPU)
-			else:
-				call_bet()
+			should_fold = randi_range(0, 3) == 1
+		elif DECENT_HOLE_CARD_TYPES.has(hole_card_type):
+			# Fold 33% of the time, otherwise call
+			should_fold = randi_range(0, 2) == 1
 		else:
-			# Fold 66% of the time, otherwise call
-			var should_fold = randi_range(0, 2) != 1
-			if should_fold:
-				game.fold(Game.Side.CPU)
-			else:
-				call_bet()
+			# Fold 50% of the time, otherwise call
+			should_fold = randi_range(0, 1) == 1
+		if should_fold:
+			game.fold(Game.Side.CPU)
+		else:
+			is_call = true
 	else:
 		# Only call if we have the strongest hands
 		if VERY_STRONG_HAND_TYPES.has(best_hand.hand_type):
-			call_bet()
+			is_call = true
 		else:
 			var should_fold = randi_range(0, 3) == 1
 			if should_fold:
 				game.fold(Game.Side.CPU)
 			else:
-				call_bet()
+				is_call = true
+	if is_call:
+		display_hand()
+		call_bet()
 
 func respond_to_raise(best_hand, is_pre_flop):
 	if did_reraise:
@@ -219,10 +240,40 @@ func respond_to_raise(best_hand, is_pre_flop):
 			raise(BIG_RAISE_AMOUNT)
 		elif STRONG_HAND_TYPES.has(best_hand_type):
 			raise(SMALL_RAISE_AMOUNT)
-		elif DECENT_HAND_TYPES.has(best_hand_type):
+		elif DECENT_HAND_TYPES.has(best_hand_type) or \
+			is_straight_draw_for_phase(game.curr_phase) or \
+			is_flush_draw_for_phase(game.curr_phase):
 			call_bet()
 		else:
-			game.fold(Game.Side.CPU)
+			# Fold at different rates depending on phase
+			var should_fold = false
+			if game.curr_phase == Game.GamePhase.FLOP:
+				should_fold = randi_range(1, 5) == 1 # Fold 20% of the time if it's the flop
+			elif game.curr_phase == Game.GamePhase.TURN:
+				should_fold = randi_range(1, 3) == 1 # Fold 33% of the time if it's the turn
+			elif game.curr_phase == Game.GamePhase.RIVER:
+				should_fold = randi_range(1, 2) == 1 # Fold 50% of the time if it's the river
+			if should_fold:
+				game.fold(Game.Side.CPU)
+			else:
+				call_bet()
+
+func is_straight_draw_for_phase(curr_phase):
+	match curr_phase:
+		Game.GamePhase.FLOP:
+			return is_straight_draw_flop()
+		Game.GamePhase.TURN:
+			return is_straight_draw_turn()
+	return false
+
+
+func is_flush_draw_for_phase(curr_phase):
+	match curr_phase:
+		Game.GamePhase.FLOP:
+			return is_straight_draw_flop()
+		Game.GamePhase.TURN:
+			return is_straight_draw_turn()
+	return false
 
 func respond_to_check(best_hand, is_pre_flop):
 	print("Responding to player check...")
@@ -267,6 +318,11 @@ func do_bluff():
 		# Bluff with 10% chance
 	var should_bluff = randi_range(1, 10) == 1
 	if should_bluff:
+		var should_tell = randi_range(0, 1) == 1
+		if should_tell:
+			curr_face_reaction = FaceReactionTypes.DEVIOUS
+			curr_tail_reaction = TailReactionTypes.QUESTION
+			update_curr_reaction()
 		raise(SMALL_RAISE_AMOUNT)
 	else:
 		check()

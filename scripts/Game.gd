@@ -52,8 +52,7 @@ var hand_type_names = [
 
 @onready var player = $Player as PlayerCardPlayer
 @onready var cpu = $CPU as CPUCardPlayer
-@onready var pot_label = get_node("/root/Game/CanvasLayer/PotLabel") as Label
-@onready var player_action_buttons = get_node("/root/Game/CanvasLayer/PlayerActionButtons") as HBoxContainer
+@onready var pot_label = get_node("/root/Game/CanvasLayer/PotContainer/PotLabel") as Label
 @onready var turn_to_bet_label = get_node("/root/Game/CanvasLayer/TurnToBet") as Label
 @onready var player_chip_count = get_node("/root/Game/CanvasLayer/PlayerChips") as Label
 @onready var cpu_chip_count = get_node("/root/Game/CanvasLayer/CPUChips") as Label
@@ -70,19 +69,26 @@ var hand_type_names = [
 @onready var game_over_label = get_node("/root/Game/CanvasLayer/GameOverModal/WinLabel") as Label
 @onready var game_over_restart_button = get_node("/root/Game/CanvasLayer/GameOverModal/PlayAgainButton") as Button
 
+# Player action buttons
+@onready var player_action_buttons = get_node("/root/Game/CanvasLayer/PlayerActionButtons") as HBoxContainer
+@onready var player_check_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/Check") as Button
+@onready var player_call_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/Call") as Button
+@onready var player_all_in_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/AllIn") as Button
+
 @export var card_scene: PackedScene
 
 signal all_ready
 
 const RANKS = ["02", "03", "04", "05", "06", "07", "08", "09", "10", "J", "Q", "K", "A"]
 const SUITS = ["diamonds", "spades", "hearts", "clubs"]
+const FLOP_START_X = -175
 
 var side_to_act: Game.Side
 var pot = 0
 var curr_player_bet = 0
 var curr_cpu_bet = 0
 var curr_phase = GamePhase.PREFLOP
-var next_card_x_pos = -150
+var next_card_x_pos = FLOP_START_X
 
 var did_player_check = false
 var did_cpu_check = false
@@ -118,7 +124,7 @@ func _ready():
 
 	# Initialize players
 	player.global_position = Vector2(0, 300)
-	cpu.global_position = Vector2(0, 0)
+	cpu.global_position = Vector2(0, -65)
 	init_game()
 	process_next_action(Side.PLAYER)
 	all_ready.emit()
@@ -140,8 +146,8 @@ func init_game():
 	cpu.blind_bet(2)
 
 	#deal cards
-	player.get_cards(draw_cards_from_deck(2))
-	cpu.get_cards(draw_cards_from_deck(2))
+	player.get_cards(draw_cards_from_deck(2), Vector2(-24, -20))
+	cpu.get_cards(draw_cards_from_deck(2), Vector2(-24, 50))
 	player.display_hand()
 
 	# Do CPU initial reaction
@@ -157,7 +163,7 @@ func draw_cards_from_deck(num_cards: int):
 	return cards
 
 func deal_cards_on_table(num_cards):
-	var card_pos_y = 175
+	var card_pos_y = 150
 	var card_pos = Vector2(next_card_x_pos, card_pos_y)
 	var flop_cards = draw_cards_from_deck(num_cards)
 	for c in flop_cards:
@@ -167,7 +173,7 @@ func deal_cards_on_table(num_cards):
 		card.global_position = card_pos
 		curr_community_cards.append(card)
 		add_child(card)
-		next_card_x_pos += card.sprite.texture.get_width() * card.sprite.scale.x
+		next_card_x_pos += card.sprite.texture.get_width() / 2 * card.sprite.scale.x + 25
 		card_pos = Vector2(next_card_x_pos, card_pos_y)
 		card.show_card()
 
@@ -187,7 +193,20 @@ func process_next_action(next_side_to_act, skip_betting = false):
 		timer.connect("timeout", on_timeout)
 		add_child(timer)
 	elif self.side_to_act == Game.Side.PLAYER:
-		player_action_buttons.show()
+		show_player_action_buttons()
+
+func show_player_action_buttons():
+	player_action_buttons.show()
+	if curr_cpu_bet == 0:
+		player_check_button.show()
+		player_call_button.hide()
+	elif curr_cpu_bet > curr_player_bet:
+		var amount_to_call = curr_cpu_bet - curr_player_bet
+		if amount_to_call > player.curr_bankroll:
+			amount_to_call = player.curr_bankroll
+		player_call_button.show()
+		player_call_button.text = "Call $" + str(amount_to_call)
+		player_check_button.hide()
 
 func delay_action(callable, time):
 	var timer = Timer.new()
@@ -200,7 +219,7 @@ func delay_action(callable, time):
 func on_player_bet(amount, bet_type):
 	action_log.show()
 	curr_player_bet += amount
-	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
+	pot_label.text = "Pot: $" + str(curr_player_bet + curr_cpu_bet + pot)
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	match bet_type:
 		BetType.CHECK:
@@ -224,7 +243,7 @@ func on_player_bet(amount, bet_type):
 func on_cpu_bet(amount, bet_type):
 	action_log.show()
 	curr_cpu_bet += amount
-	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
+	pot_label.text = "Pot: $" + str(curr_player_bet + curr_cpu_bet + pot)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 	match bet_type:
 		BetType.CHECK:
@@ -246,6 +265,7 @@ func on_cpu_bet(amount, bet_type):
 			process_next_action(Game.Side.PLAYER)
 
 func go_to_next_phase_with_delay(delay: int):
+	player_action_buttons.hide()
 	var callable = Callable(self, "go_to_next_phase")
 	delay_action(callable, delay)
 
@@ -282,13 +302,13 @@ func blind_bet(amount, side: Game.Side):
 		curr_player_bet = amount
 	elif side == Side.CPU:
 		curr_cpu_bet = amount
-	pot_label.text = "$" + str(curr_player_bet + curr_cpu_bet + pot)
+	pot_label.text = "Pot: $" + str(curr_player_bet + curr_cpu_bet + pot)
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 
 func show_gameover_modal(winner):
 	game_over_modal.show()
-	showdown_win_label.text = "Player Wins!" if winner == Side.PLAYER else "CPU Wins!"
+	game_over_label.text = "Player Wins!" if winner == Side.PLAYER else "CPU Wins!"
 
 func start_new_hand():
 	if hand_winner == Side.PLAYER:
@@ -299,6 +319,8 @@ func start_new_hand():
 		player.curr_bankroll += round(pot / 2)
 		cpu.curr_bankroll += round(pot / 2)
 	# If player or CPU has a 0 bankroll after previous round winnings, game is over
+	print(cpu.curr_bankroll)
+	print(player.curr_bankroll)
 	if player.curr_bankroll == 0:
 		show_gameover_modal(Side.CPU)
 	elif cpu.curr_bankroll == 0:
@@ -313,7 +335,7 @@ func new_game():
 
 func reset_game_state():
 	pot = 0
-	pot_label.text = "$0"
+	pot_label.text = "Pot: $0"
 	is_player_all_in = false
 	is_cpu_all_in = false
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
@@ -333,7 +355,7 @@ func reset_game_state():
 	curr_cpu_bet = 0
 	curr_phase = GamePhase.PREFLOP
 	deck = []
-	next_card_x_pos = -150 # For positioning flop cards at the middle of the table (fix this later)
+	next_card_x_pos = FLOP_START_X # For positioning flop cards at the middle of the table (fix this later)
 	init_game()
 	process_next_action(Side.PLAYER)
 

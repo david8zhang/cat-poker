@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvkyfb011kf6n"
-path="res://.godot/imported/face_neutral.png-ff8eaaabe21286d853c5d61ba83e8667.ctex"
+uid="uid://b5x11p6yfmb83"
+path="res://.godot/imported/face_devious.png-4d0f5c359f6b8057ad927d3c55b2f3cc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/face_reactions/face_neutral.png"
-dest_files=["res://.godot/imported/face_neutral.png-ff8eaaabe21286d853c5d61ba83e8667.ctex"]
+source_file="res://sprites/face_reactions/easy/face_devious.png"
+dest_files=["res://.godot/imported/face_devious.png-4d0f5c359f6b8057ad927d3c55b2f3cc.ctex"]
 
 [params]
 

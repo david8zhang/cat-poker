@@ -5,7 +5,9 @@
 [ext_resource type="PackedScene" uid="uid://c60wlqcbrkrbo" path="res://prefabs/Card.tscn" id="2_bq42j"]
 [ext_resource type="PackedScene" uid="uid://cfv4qj050cb5i" path="res://prefabs/CPU.tscn" id="3_nuusr"]
 [ext_resource type="Texture2D" uid="uid://cafhwcd7m5ih6" path="res://sprites/backgrounds/background.png" id="5_d6hhe"]
-[ext_resource type="Texture2D" uid="uid://crktjn38uuhss" path="res://sprites/backgrounds/table.png" id="6_252dc"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_2ypc2"]
+load_path = "res://.godot/imported/table.png-6b8953174bea532761bb9f919e6a95a8.ctex"
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_ddqca")
@@ -17,22 +19,28 @@ card_scene = ExtResource("2_bq42j")
 texture = ExtResource("5_d6hhe")
 
 [node name="Table" type="Sprite2D" parent="."]
-texture = ExtResource("6_252dc")
+texture = SubResource("CompressedTexture2D_2ypc2")
+offset = Vector2(2.08165e-12, 2.08165e-12)
 
 [node name="Player" parent="." instance=ExtResource("2_5ghjy")]
 card_scene = ExtResource("2_bq42j")
 
 [node name="CPU" parent="." instance=ExtResource("3_nuusr")]
+position = Vector2(2.08165e-12, 2.08165e-12)
 card_scene = ExtResource("2_bq42j")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="PlayerActionButtons" type="HBoxContainer" parent="CanvasLayer"]
-anchors_preset = 2
+anchors_preset = 7
+anchor_left = 0.5
 anchor_top = 1.0
+anchor_right = 0.5
 anchor_bottom = 1.0
+offset_left = -181.0
 offset_top = -40.0
-offset_right = 194.0
+offset_right = 181.0
+grow_horizontal = 2
 grow_vertical = 0
 
 [node name="Check" type="Button" parent="CanvasLayer/PlayerActionButtons"]
@@ -48,19 +56,19 @@ size_flags_vertical = 8
 text = "Call
 "
 
-[node name="Small Raise" type="Button" parent="CanvasLayer/PlayerActionButtons"]
+[node name="SmallRaise" type="Button" parent="CanvasLayer/PlayerActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 8
-text = "Small Raise"
+text = "Raise $10"
 
-[node name="Big Raise" type="Button" parent="CanvasLayer/PlayerActionButtons"]
+[node name="BigRaise" type="Button" parent="CanvasLayer/PlayerActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 8
-text = "Big Raise"
+text = "Raise $30"
 
-[node name="All in" type="Button" parent="CanvasLayer/PlayerActionButtons"]
+[node name="AllIn" type="Button" parent="CanvasLayer/PlayerActionButtons"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 8
@@ -73,21 +81,42 @@ size_flags_horizontal = 4
 size_flags_vertical = 8
 text = "Fold"
 
-[node name="PotLabel" type="Label" parent="CanvasLayer"]
-anchors_preset = 5
+[node name="PotContainer" type="ColorRect" parent="CanvasLayer"]
+anchors_preset = 8
 anchor_left = 0.5
+anchor_top = 0.5
 anchor_right = 0.5
-offset_left = -20.0
-offset_right = 20.0
-offset_bottom = 38.0
+anchor_bottom = 0.5
+offset_left = -84.5
+offset_top = 55.0
+offset_right = 84.5
+offset_bottom = 80.0
 grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.352941)
+
+[node name="PotLabel" type="Label" parent="CanvasLayer/PotContainer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -41.0
+offset_top = -19.0
+offset_right = 41.0
+offset_bottom = 19.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 25
-text = "$0"
+theme_override_font_sizes/font_size = 18
+text = "Pot: $0"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="TurnToBet" type="Label" parent="CanvasLayer"]
+visible = false
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -128,6 +157,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="CPUReaction" type="Label" parent="CanvasLayer"]
+visible = false
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
@@ -246,7 +276,7 @@ text = "Play Again
 
 [connection signal="button_up" from="CanvasLayer/PlayerActionButtons/Check" to="Player" method="_on_check_button_up"]
 [connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Call" to="Player" method="_on_call_pressed"]
-[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Small Raise" to="Player" method="_on_small_raise_pressed"]
-[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Big Raise" to="Player" method="_on_big_raise_pressed"]
-[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/All in" to="Player" method="_on_all_in_pressed"]
+[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/SmallRaise" to="Player" method="_on_small_raise_pressed"]
+[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/BigRaise" to="Player" method="_on_big_raise_pressed"]
+[connection signal="pressed" from="CanvasLayer/PlayerActionButtons/AllIn" to="Player" method="_on_all_in_pressed"]
 [connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Fold" to="Player" method="_on_fold_pressed"]

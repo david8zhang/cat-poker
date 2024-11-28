@@ -26,13 +26,14 @@ enum HoleCardType {
 	A_10,
 	PAIR,
 	SUITED_CONNECTOR,
+	HIGH_CARD,
 	TRASH
 }
 
 signal bet(amount, bet_type)
 
-func get_cards(cards):
-	var curr_pos = Vector2(0, 0)
+func get_cards(cards, relative_pos = Vector2(0, 0)):
+	var curr_pos = relative_pos
 	for card in cards:
 		var new_card = card_scene.instantiate() as Card
 		new_card.position = curr_pos
@@ -42,7 +43,7 @@ func get_cards(cards):
 		add_child(new_card)
 
 		# TODO: Figure out how to center cards
-		curr_pos.x += new_card.sprite.texture.get_width() * new_card.sprite.scale.x
+		curr_pos.x += new_card.sprite.texture.get_width() / 2 * new_card.sprite.scale.x
 
 func display_hand():
 	for card in cards_in_hand:
@@ -85,6 +86,8 @@ func get_hole_cards_type():
 		return HoleCardType.PAIR
 	elif is_suited(cards_in_hand) and is_connector(cards_in_hand):
 		return HoleCardType.SUITED_CONNECTOR
+	elif is_high_card(cards_in_hand):
+		return HoleCardType.HIGH_CARD
 	return HoleCardType.TRASH
 
 func is_pocket(cards, rank_to_check):
@@ -103,3 +106,7 @@ func is_suited(cards):
 
 func is_specific_hand(cards, rank1, rank2):
 	return (cards[0].rank == rank1 and cards[1].rank == rank2) or (cards[0].rank == rank2 and cards[1].rank == rank1)
+
+func is_high_card(cards):
+	var high_ranks = ["J", "Q", "K", "A"]
+	return high_ranks.has(cards[0].rank) or high_ranks.has(cards[1].rank)
