@@ -289,7 +289,8 @@ func on_player_bet(amount, bet_type):
 		BetType.ALL_IN:
 			action_log_label.text = "Player All In!"
 			is_player_all_in = true
-			if is_cpu_all_in:
+			if is_cpu_all_in or curr_player_bet < curr_cpu_bet:
+				player.display_hand()
 				go_to_next_phase_with_delay(1)
 			else:
 				process_next_action(Game.Side.CPU)
@@ -317,7 +318,8 @@ func on_cpu_bet(amount, bet_type):
 		BetType.ALL_IN:
 			action_log_label.text = "CPU All In!"
 			is_cpu_all_in = true
-			if is_player_all_in:
+			if is_player_all_in or curr_cpu_bet < curr_player_bet:
+				cpu.display_hand()
 				go_to_next_phase_with_delay(1)
 			else:
 				process_next_action(Game.Side.PLAYER)
@@ -388,10 +390,7 @@ func start_new_hand():
 	reset_game_state()
 
 func new_game():
-	game_over_modal.hide()
-	player.curr_bankroll = CardPlayer.STARTING_BANKROLL
-	cpu.curr_bankroll = CardPlayer.STARTING_BANKROLL
-	reset_game_state()
+	get_tree().reload_current_scene()
 
 func reset_game_state():
 	pot = 0
