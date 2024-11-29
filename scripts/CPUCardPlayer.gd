@@ -70,11 +70,9 @@ func all_ready():
 	update_curr_reaction()
 
 func update_curr_reaction():
-	var cpu_reaction_label = game.cpu_reaction_label
 	var face_reaction_label = get_enum_name(FaceReactionTypes, curr_face_reaction).to_lower()
 	var tail_reaction_label = get_enum_name(TailReactionTypes, curr_tail_reaction).to_lower()
 	var difficulty = get_enum_name(Difficulty, curr_difficulty).to_lower()
-	cpu_reaction_label.text = "Face: " + face_reaction_label + "\nTail: " + tail_reaction_label
 	face_sprite.texture = load("res://sprites/face_reactions/" + difficulty + "/" + "face_" + face_reaction_label + ".png")
 	tail_sprite.texture = load("res://sprites/tail_reactions/" + difficulty + "/" + "tail_" + tail_reaction_label + ".png")
 
@@ -389,6 +387,16 @@ func deceptive_negative_react():
 func surprised_react(is_positive):
 	curr_face_reaction = FaceReactionTypes.SURPRISED
 	curr_tail_reaction = TailReactionTypes.POSITIVE if is_positive else TailReactionTypes.NEGATIVE
+	update_curr_reaction()
+
+func win_reaction():
+	curr_face_reaction = FaceReactionTypes.DEVIOUS
+	curr_tail_reaction = TailReactionTypes.POSITIVE
+	update_curr_reaction()
+
+func lose_reaction():
+	curr_face_reaction = FaceReactionTypes.SAD
+	curr_tail_reaction = TailReactionTypes.NEUTRAL
 	update_curr_reaction()
 
 func is_reverse_react():
