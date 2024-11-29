@@ -125,18 +125,26 @@ offset_bottom = 26.0
 grow_horizontal = 0
 text = "Turn to Bet: PLAYER"
 
-[node name="PlayerChips" type="Label" parent="CanvasLayer"]
-offset_right = 154.0
-offset_bottom = 26.0
+[node name="BankrollSection" type="ColorRect" parent="CanvasLayer"]
+offset_right = 126.0
+offset_bottom = 58.0
+color = Color(0, 0, 0, 0.588235)
+
+[node name="PlayerChips" type="Label" parent="CanvasLayer/BankrollSection"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 158.0
+offset_bottom = 30.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
 text = "Player: $0
 "
 
-[node name="CPUChips" type="Label" parent="CanvasLayer"]
-offset_top = 26.0
-offset_right = 154.0
-offset_bottom = 52.0
+[node name="CPUChips" type="Label" parent="CanvasLayer/BankrollSection"]
+offset_left = 4.0
+offset_top = 30.0
+offset_right = 158.0
+offset_bottom = 56.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
 text = "CPU: $0

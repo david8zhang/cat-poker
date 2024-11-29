@@ -54,8 +54,8 @@ var hand_type_names = [
 @onready var cpu = $CPU as CPUCardPlayer
 @onready var pot_label = get_node("/root/Game/CanvasLayer/PotContainer/PotLabel") as Label
 @onready var turn_to_bet_label = get_node("/root/Game/CanvasLayer/TurnToBet") as Label
-@onready var player_chip_count = get_node("/root/Game/CanvasLayer/PlayerChips") as Label
-@onready var cpu_chip_count = get_node("/root/Game/CanvasLayer/CPUChips") as Label
+@onready var player_chip_count = get_node("/root/Game/CanvasLayer/BankrollSection/PlayerChips") as Label
+@onready var cpu_chip_count = get_node("/root/Game/CanvasLayer/BankrollSection/CPUChips") as Label
 @onready var action_log = get_node("/root/Game/CanvasLayer/ActionLog") as Label
 @onready var cpu_reaction_label = get_node("/root/Game/CanvasLayer/CPUReaction") as Label
 

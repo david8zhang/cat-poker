@@ -50,9 +50,12 @@ func display_hand():
 		card.show_card()
 
 func make_bet(amount, bet_type):
+	var is_all_in = false
 	amount = min(amount, curr_bankroll)
+	if amount == curr_bankroll:
+		is_all_in = true
 	curr_bankroll -= amount
-	bet.emit(amount, bet_type)
+	bet.emit(amount, Game.BetType.ALL_IN if is_all_in else bet_type)
 
 func check():
 	make_bet(0, Game.BetType.CHECK)
