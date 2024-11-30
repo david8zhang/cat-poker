@@ -372,6 +372,12 @@ func show_gameover_modal(winner):
 	game_over_modal.show()
 	game_over_label.text = "Player Wins!" if winner == Side.PLAYER else "CPU Wins!"
 
+func go_to_next_cpu():
+	if cpu.curr_difficulty == CPUCardPlayer.Difficulty.HARD:
+		show_gameover_modal(Side.PLAYER)
+	else:
+		cpu.go_to_next_difficulty()
+
 func start_new_hand():
 	if hand_winner == Side.PLAYER:
 		player.curr_bankroll += pot
@@ -386,7 +392,7 @@ func start_new_hand():
 	if player.curr_bankroll == 0:
 		show_gameover_modal(Side.CPU)
 	elif cpu.curr_bankroll == 0:
-		show_gameover_modal(Side.PLAYER)
+		go_to_next_cpu()
 	reset_game_state()
 
 func new_game():

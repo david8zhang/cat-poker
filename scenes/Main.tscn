@@ -142,6 +142,7 @@ offset_right = 126.0
 offset_bottom = 58.0
 
 [node name="PlayerChips" type="Label" parent="CanvasLayer/BankrollSection"]
+layout_mode = 0
 offset_left = 4.0
 offset_top = 4.0
 offset_right = 158.0
@@ -150,6 +151,7 @@ text = "Player: $0
 "
 
 [node name="CPUChips" type="Label" parent="CanvasLayer/BankrollSection"]
+layout_mode = 0
 offset_left = 4.0
 offset_top = 30.0
 offset_right = 158.0
