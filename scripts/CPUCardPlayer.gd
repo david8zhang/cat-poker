@@ -92,7 +92,7 @@ func go_to_next_difficulty():
 			curr_bankroll = 2 * CardPlayer.STARTING_BANKROLL
 			new_difficulty = Difficulty.MEDIUM
 		Difficulty.MEDIUM:
-			curr_bankroll = 3 * CardPlayer.STARTING_BANKROLL
+			curr_bankroll = 4 * CardPlayer.STARTING_BANKROLL
 			new_difficulty = Difficulty.HARD
 	curr_difficulty = new_difficulty
 	update_curr_reaction()

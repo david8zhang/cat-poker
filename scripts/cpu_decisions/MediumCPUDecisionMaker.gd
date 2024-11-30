@@ -96,7 +96,12 @@ func respond_to_raise(best_hand, is_pre_flop):
 			cpu.did_reraise = true
 			cpu.raise(cpu.SMALL_RAISE_AMOUNT)
 		else:
-			game.fold(Game.Side.CPU)
+			# Sometimes play bad hands
+			var should_play_bad_hand = randi_range(0, 3) == 0
+			if should_play_bad_hand:
+				cpu.raise(cpu.SMALL_RAISE_AMOUNT)
+			else:
+				game.fold(Game.Side.CPU)
 	else:
 		var best_hand_type = best_hand.hand_type
 		if cpu.VERY_STRONG_HAND_TYPES.has(best_hand_type):

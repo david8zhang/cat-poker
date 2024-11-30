@@ -263,6 +263,7 @@ func show_player_action_buttons():
 
 	# Can't raise when CPU is already all in
 	if is_cpu_all_in:
+		player_check_button.hide()
 		player_small_raise_button.hide()
 		player_big_raise_button.hide()
 	else:
@@ -301,7 +302,7 @@ func on_player_bet(amount, bet_type):
 		BetType.ALL_IN:
 			action_log_label.text = "Player All In!"
 			is_player_all_in = true
-			if is_cpu_all_in or curr_player_bet < curr_cpu_bet:
+			if is_cpu_all_in or curr_player_bet <= curr_cpu_bet:
 				cpu.display_hand()
 				go_to_next_phase_with_delay(1)
 			else:
@@ -332,7 +333,7 @@ func on_cpu_bet(amount, bet_type):
 		BetType.ALL_IN:
 			action_log_label.text = "CPU All In!"
 			is_cpu_all_in = true
-			if is_player_all_in or curr_cpu_bet < curr_player_bet:
+			if is_player_all_in or curr_cpu_bet <= curr_player_bet:
 				cpu.display_hand()
 				go_to_next_phase_with_delay(1)
 			else:
@@ -351,6 +352,7 @@ func go_to_next_phase():
 	var is_one_side_all_in = is_player_all_in or is_cpu_all_in
 	did_player_check = false
 	did_cpu_check = false
+	cpu.did_reraise = false
 	match curr_phase:
 		GamePhase.PREFLOP:
 			deal_cards_on_table(3)
@@ -403,13 +405,9 @@ func blind_bet(amount, side: Game.Side):
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 
-func show_gameover_modal(winner):
-	game_over_modal.show()
-	game_over_label.text = "Player Wins!" if winner == Side.PLAYER else "CPU Wins!"
-
 func go_to_next_cpu():
 	if cpu.curr_difficulty == CPUCardPlayer.Difficulty.HARD:
-		show_gameover_modal(Side.PLAYER)
+		get_tree().change_scene_to_file("res://scenes/Victory.tscn")
 	else:
 		cpu.go_to_next_difficulty()
 
@@ -422,7 +420,7 @@ func start_new_hand():
 		player.curr_bankroll += round(pot / 2)
 		cpu.curr_bankroll += round(pot / 2)
 	if player.curr_bankroll == 0:
-		show_gameover_modal(Side.CPU)
+		get_tree().change_scene_to_file("res://scenes/GameOver.tscn")
 	elif cpu.curr_bankroll == 0:
 		go_to_next_cpu()
 	reset_game_state()
@@ -437,6 +435,7 @@ func reset_game_state():
 	is_cpu_all_in = false
 	did_player_check = false
 	did_cpu_check = false
+	cpu.did_reraise = false
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 	showdown_result.hide()

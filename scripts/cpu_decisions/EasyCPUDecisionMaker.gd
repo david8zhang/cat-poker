@@ -20,7 +20,7 @@ func react_to_phase():
 				if cpu.VERY_STRONG_HAND_TYPES.has(best_hand_so_far) or cpu.STRONG_HAND_TYPES.has(best_hand_so_far):
 					cpu.very_positive_react()
 				elif cpu.DECENT_HAND_TYPES.has(best_hand_so_far):
-					cpu.positve_face_react()
+					cpu.positive_face_react()
 				elif cpu.is_straight_draw_flop() or cpu.is_flush_draw_flop():
 					cpu.positive_tail_react()
 				else:
