@@ -7,16 +7,16 @@ extends Node
 func react_to_phase():
 	pass
 
-func respond_to_all_in(best_hand, is_pre_flop):
+func respond_to_all_in(_best_hand, _is_pre_flop):
 	pass
 
-func respond_to_raise(best_hand, is_pre_flop):
+func respond_to_raise(_best_hand, _is_pre_flop):
 	pass
 
-func respond_to_check(best_hand, is_pre_flop):
+func respond_to_check(_best_hand, _is_pre_flop):
 	pass
 
-func place_first_bet(best_hand, is_pre_flop):
+func place_first_bet(_best_hand, _is_pre_flop):
 	pass
 
 func do_action():

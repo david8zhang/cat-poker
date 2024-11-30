@@ -1,7 +1,7 @@
 class_name CardPlayer
 extends Node2D
 
-const STARTING_BANKROLL = 2
+const STARTING_BANKROLL = 100
 const SMALL_RAISE_AMOUNT = 10
 const BIG_RAISE_AMOUNT = 30
 
@@ -25,6 +25,9 @@ enum HoleCardType {
 	A_Q,
 	A_J,
 	A_10,
+	K_Q,
+	K_J,
+	Q_J,
 	SUITED_CONNECTOR,
 	HIGH_CARD,
 	TRASH
@@ -85,6 +88,12 @@ func get_hole_cards_type():
 		return HoleCardType.A_J
 	elif is_specific_hand(cards_in_hand, "A", "10"):
 		return HoleCardType.A_10
+	elif is_specific_hand(cards_in_hand, "K", "Q"):
+		return HoleCardType.K_Q
+	elif is_specific_hand(cards_in_hand, "K", "J"):
+		return HoleCardType.K_J
+	elif is_specific_hand(cards_in_hand, "Q", "J"):
+		return HoleCardType.Q_J
 	elif is_pair(cards_in_hand):
 		return HoleCardType.PAIR
 	elif is_suited(cards_in_hand) and is_connector(cards_in_hand):

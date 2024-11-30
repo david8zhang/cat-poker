@@ -9,9 +9,9 @@ func react_to_phase():
 			if cpu.STRONG_HOLE_CARD_TYPES.has(type_of_hole_cards):
 				cpu.very_positive_react()
 			elif cpu.DECENT_HOLE_CARD_TYPES.has(type_of_hole_cards):
-				cpu.slightly_positive_react()
+				cpu.positive_face_react()
 			elif type_of_hole_cards == CPUCardPlayer.HoleCardType.TRASH:
-				cpu.slightly_negative_react()
+				cpu.negative_face_react()
 			else:
 				cpu.neutral_react()
 		Game.GamePhase.FLOP:
@@ -20,9 +20,9 @@ func react_to_phase():
 				if cpu.VERY_STRONG_HAND_TYPES.has(best_hand_so_far) or cpu.STRONG_HAND_TYPES.has(best_hand_so_far):
 					cpu.very_positive_react()
 				elif cpu.DECENT_HAND_TYPES.has(best_hand_so_far):
-					cpu.slightly_positive_react()
+					cpu.positve_face_react()
 				elif cpu.is_straight_draw_flop() or cpu.is_flush_draw_flop():
-					cpu.slightly_positive_react()
+					cpu.positive_tail_react()
 				else:
 					cpu.neutral_react()
 			else:
@@ -33,9 +33,9 @@ func react_to_phase():
 				if cpu.VERY_STRONG_HAND_TYPES.has(best_hand_so_far) or cpu.STRONG_HAND_TYPES.has(best_hand_so_far):
 					cpu.very_positive_react()
 				elif cpu.DECENT_HAND_TYPES.has(best_hand_so_far):
-					cpu.slightly_positive_react()
+					cpu.positive_face_react()
 				elif cpu.is_straight_draw_turn() or cpu.is_flush_draw_turn():
-					cpu.slightly_positive_react()
+					cpu.positive_tail_react()
 				else:
 					cpu.neutral_react()
 			else:
@@ -44,13 +44,13 @@ func react_to_phase():
 			if cpu.is_curr_hand_better_than_community():
 				var best_hand_so_far = cpu.get_best_hand_river().hand_type
 				if cpu.VERY_STRONG_HAND_TYPES.has(best_hand_so_far) or cpu.STRONG_HAND_TYPES.has(best_hand_so_far):
-					cpu.slightly_positive_react()
+					cpu.very_positive_react()
 				elif cpu.DECENT_HAND_TYPES.has(best_hand_so_far):
-					cpu.slightly_positive_react()
+					cpu.positive_face_react()
 				elif best_hand_so_far == Game.HandTypes.PAIR:
 					cpu.neutral_react()
 				else:
-					cpu.slightly_negative_react()
+					cpu.negative_face_react()
 			else:
 				cpu.neutral_react()
 
@@ -94,14 +94,12 @@ func place_first_bet(best_hand, is_pre_flop):
 			do_bluff()
 
 func do_bluff():
-		# Bluff with 10% chance
-	var should_bluff = randi_range(1, 10) == 1
+		# Bluff with 25% chance
+	var should_bluff = randi_range(1, 4) == 1
 	if should_bluff:
-		var should_tell = randi_range(0, 1) == 1
-		if should_tell:
-			cpu.curr_face_reaction = CPUCardPlayer.FaceReactionTypes.DEVIOUS
-			cpu.curr_tail_reaction = CPUCardPlayer.TailReactionTypes.QUESTION
-			cpu.update_curr_reaction()
+		cpu.curr_face_reaction = CPUCardPlayer.FaceReactionTypes.DEVIOUS
+		cpu.curr_tail_reaction = CPUCardPlayer.TailReactionTypes.QUESTION
+		cpu.update_curr_reaction()
 		cpu.raise(cpu.SMALL_RAISE_AMOUNT)
 	else:
 		cpu.check()

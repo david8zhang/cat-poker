@@ -37,6 +37,9 @@ const STRONG_HOLE_CARD_TYPES = [
 ]
 const DECENT_HOLE_CARD_TYPES = [
 	HoleCardType.A_10,
+	HoleCardType.K_Q,
+	HoleCardType.K_J,
+	HoleCardType.Q_J,
 	HoleCardType.SUITED_CONNECTOR
 ]
 
@@ -182,7 +185,12 @@ func very_positive_react():
 	curr_tail_reaction = TailReactionTypes.POSITIVE
 	update_curr_reaction()
 
-func slightly_positive_react():
+func positive_face_react():
+	curr_face_reaction = FaceReactionTypes.EXCITED
+	curr_tail_reaction = TailReactionTypes.NEUTRAL
+	update_curr_reaction()
+
+func positive_tail_react():
 	curr_face_reaction = FaceReactionTypes.NEUTRAL
 	curr_tail_reaction = TailReactionTypes.POSITIVE
 	update_curr_reaction()
@@ -192,14 +200,19 @@ func very_negative_react():
 	curr_tail_reaction = TailReactionTypes.NEGATIVE
 	update_curr_reaction()
 
-func slightly_negative_react():
+func negative_face_react():
+	curr_face_reaction = FaceReactionTypes.SAD
+	curr_tail_reaction = TailReactionTypes.NEUTRAL
+	update_curr_reaction()
+
+func negative_tail_react():
 	curr_face_reaction = FaceReactionTypes.NEUTRAL
 	curr_tail_reaction = TailReactionTypes.NEGATIVE
 	update_curr_reaction()
 
 # Deceptive positive reactions are where face + tail don't match
 func deceptive_positive_react():
-	curr_face_reaction = FaceReactionTypes.EXCITED
+	curr_face_reaction = FaceReactionTypes.DEVIOUS
 	curr_tail_reaction = TailReactionTypes.NEGATIVE
 	update_curr_reaction()
 
@@ -209,9 +222,14 @@ func deceptive_negative_react():
 	update_curr_reaction()
 
 # Surprise = either really good OR really bad (Tail react as a clue)
-func surprised_react(is_positive):
+func positive_surprised_react():
 	curr_face_reaction = FaceReactionTypes.SURPRISED
-	curr_tail_reaction = TailReactionTypes.POSITIVE if is_positive else TailReactionTypes.NEGATIVE
+	curr_tail_reaction = TailReactionTypes.POSITIVE
+	update_curr_reaction()
+
+func negative_surprised_react():
+	curr_face_reaction = FaceReactionTypes.SURPRISED
+	curr_tail_reaction = TailReactionTypes.NEGATIVE
 	update_curr_reaction()
 
 func win_reaction():
