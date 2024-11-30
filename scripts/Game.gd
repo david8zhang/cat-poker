@@ -74,6 +74,8 @@ var hand_type_names = [
 @onready var player_action_buttons = get_node("/root/Game/CanvasLayer/PlayerActionButtons") as HBoxContainer
 @onready var player_check_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/Check") as Button
 @onready var player_call_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/Call") as Button
+@onready var player_small_raise_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/SmallRaise") as Button
+@onready var player_big_raise_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/BigRaise") as Button
 @onready var player_all_in_button = get_node("/root/Game/CanvasLayer/PlayerActionButtons/AllIn") as Button
 
 @export var card_scene: PackedScene
@@ -177,35 +179,35 @@ func draw_cards_from_deck(num_cards: int):
 	return cards
 
 func handle_blind_bets(complete_cb):
-	big_blind_bet()
-
-	# add some delay between big blind bet and small blind bet
-	var timer = Timer.new()
-	timer.autostart = true
-	timer.one_shot = true
-	timer.wait_time = 1
-	var on_timeout = Callable(self, "small_blind_bet").bind(complete_cb)
-	timer.connect("timeout", on_timeout)
-	add_child(timer)
+	# If current big blind can't cover, auto fold
+	if player.curr_bankroll < 2:
+		fold(Side.PLAYER, "Player folded (not enough for blind!)...\nCPU wins!")
+	elif cpu.curr_bankroll < 2:
+		fold(Side.CPU, "CPU folded (not enough for blind!)...\nPlayer wins!")
+	else:
+		big_blind_bet()
+		# add some delay between big blind bet and small blind bet
+		var timer = Timer.new()
+		timer.autostart = true
+		timer.one_shot = true
+		timer.wait_time = 1
+		var on_timeout = Callable(self, "small_blind_bet").bind(complete_cb)
+		timer.connect("timeout", on_timeout)
+		add_child(timer)
 
 func big_blind_bet():
-	action_log.show()
 	if big_blind_side == Side.PLAYER:
 		player.blind_bet(2)
-		action_log_label.text = "Player (Big Blind): $2"
 	if big_blind_side == Side.CPU:
 		cpu.blind_bet(2)
-		action_log_label.text = "CPU (Big Blind): $2"
 
 func small_blind_bet(complete_cb):
-	action_log.show()
 	if big_blind_side == Side.PLAYER:
 		cpu.blind_bet(1)
-		action_log_label.text = "CPU (Small Blind): $1"
 	if big_blind_side == Side.CPU:
 		player.blind_bet(1)
-		action_log_label.text = "Player (Small Blind): $1"
-		# add some delay between big blind bet and small blind bet
+
+	# add some delay between small blind bet and card dealing
 	var timer = Timer.new()
 	timer.autostart = true
 	timer.one_shot = true
@@ -259,6 +261,14 @@ func show_player_action_buttons():
 		player_call_button.text = "Call $" + str(amount_to_call)
 		player_check_button.hide()
 
+	# Can't raise when CPU is already all in
+	if is_cpu_all_in:
+		player_small_raise_button.hide()
+		player_big_raise_button.hide()
+	else:
+		player_small_raise_button.show()
+		player_big_raise_button.show()
+
 func delay_action(callable, time):
 	var timer = Timer.new()
 	timer.autostart = true
@@ -285,12 +295,14 @@ func on_player_bet(amount, bet_type):
 			process_next_action(Game.Side.CPU)
 		BetType.CALL:
 			action_log_label.text = "Player calls $" + str(curr_player_bet)
+			if is_cpu_all_in:
+				cpu.display_hand()
 			go_to_next_phase_with_delay(1)
 		BetType.ALL_IN:
 			action_log_label.text = "Player All In!"
 			is_player_all_in = true
 			if is_cpu_all_in or curr_player_bet < curr_cpu_bet:
-				player.display_hand()
+				cpu.display_hand()
 				go_to_next_phase_with_delay(1)
 			else:
 				process_next_action(Game.Side.CPU)
@@ -314,6 +326,8 @@ func on_cpu_bet(amount, bet_type):
 			process_next_action(Game.Side.PLAYER)
 		BetType.CALL:
 			action_log_label.text = "CPU calls $" + str(curr_cpu_bet)
+			if is_player_all_in:
+				cpu.display_hand()
 			go_to_next_phase_with_delay(1)
 		BetType.ALL_IN:
 			action_log_label.text = "CPU All In!"
@@ -360,9 +374,30 @@ func handle_cpu_action():
 	cpu.do_action()
 
 func blind_bet(amount, side: Game.Side):
+	action_log.show()
 	if side == Side.PLAYER:
+		if player.curr_bankroll == 0:
+			is_player_all_in = true
+			action_log_label.text = "Player All In!"
+		else:
+			if big_blind_side == Side.PLAYER:
+				action_log_label.text = "Player (Big Blind): $" + str(amount)
+			else:
+				action_log_label.text = "Player (Small Blind): $" + str(amount)
+		if is_cpu_all_in:
+			player.display_hand()
 		curr_player_bet = amount
 	elif side == Side.CPU:
+		if cpu.curr_bankroll == 0:
+			is_cpu_all_in = true
+			action_log_label.text = "CPU All In!"
+		else:
+			if big_blind_side == Side.CPU:
+				action_log_label.text = "CPU (Big Blind): $" + str(amount)
+			else:
+				action_log_label.text = "CPU (Small Blind): $" + str(amount)
+		if is_player_all_in:
+			cpu.display_hand()
 		curr_cpu_bet = amount
 	pot_label.text = "Pot: $" + str(curr_player_bet + curr_cpu_bet + pot)
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
@@ -386,9 +421,6 @@ func start_new_hand():
 	else:
 		player.curr_bankroll += round(pot / 2)
 		cpu.curr_bankroll += round(pot / 2)
-	# If player or CPU has a 0 bankroll after previous round winnings, game is over
-	print(cpu.curr_bankroll)
-	print(player.curr_bankroll)
 	if player.curr_bankroll == 0:
 		show_gameover_modal(Side.CPU)
 	elif cpu.curr_bankroll == 0:
@@ -654,13 +686,19 @@ func _combination_helper(arr: Array, combination_size: int, start: int, current:
 		_combination_helper(arr, combination_size, i + 1, current, result)
 		current.pop_back()
 
-func fold(side: Game.Side):
+func fold(side: Game.Side, message = null):
 	cpu_reaction_label.hide()
 	pot += curr_player_bet + curr_cpu_bet
 	showdown_result.show()
 	if side == Game.Side.PLAYER:
-		showdown_win_label.text = "Player folded...\nCPU Wins!"
+		if message != null:
+			showdown_win_label.text = message
+		else:
+			showdown_win_label.text = "Player folded...\nCPU Wins!"
 		hand_winner = Side.CPU
 	elif side == Game.Side.CPU:
-		showdown_win_label.text = "CPU folded...\nPlayer wins!"
+		if message != null:
+			showdown_win_label.text = message
+		else:
+			showdown_win_label.text = "CPU folded...\nPlayer wins!"
 		hand_winner = Side.PLAYER

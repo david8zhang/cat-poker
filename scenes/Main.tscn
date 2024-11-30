@@ -32,7 +32,6 @@ card_scene = ExtResource("2_bq42j")
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="PlayerActionButtons" type="HBoxContainer" parent="CanvasLayer"]
-visible = false
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -43,6 +42,7 @@ offset_top = -40.0
 offset_right = 181.0
 grow_horizontal = 2
 grow_vertical = 0
+alignment = 1
 
 [node name="Check" type="Button" parent="CanvasLayer/PlayerActionButtons"]
 layout_mode = 2

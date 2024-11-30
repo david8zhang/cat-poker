@@ -1,7 +1,7 @@
 class_name CardPlayer
 extends Node2D
 
-const STARTING_BANKROLL = 200
+const STARTING_BANKROLL = 2
 const SMALL_RAISE_AMOUNT = 10
 const BIG_RAISE_AMOUNT = 30
 
