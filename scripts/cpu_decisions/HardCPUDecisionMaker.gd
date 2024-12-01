@@ -85,13 +85,30 @@ func respond_to_raise(best_hand, is_pre_flop):
 	elif is_pre_flop:
 		var hole_card_type = cpu.get_hole_cards_type()
 		if cpu.STRONG_HOLE_CARD_TYPES.has(hole_card_type):
-			cpu.did_reraise = true
-			cpu.raise(cpu.BIG_RAISE_AMOUNT)
+			var should_call = randi_range(1, 10) == 1
+			if should_call:
+				cpu.call_bet()
+			else:
+				cpu.did_reraise = true
+				cpu.raise(cpu.BIG_RAISE_AMOUNT)
 		elif cpu.DECENT_HOLE_CARD_TYPES.has(hole_card_type):
-			cpu.did_reraise = true
-			cpu.raise(cpu.SMALL_RAISE_AMOUNT)
+			var should_call = randi_range(1, 4) == 1
+			if should_call:
+				cpu.call_bet()
+			else:
+				cpu.did_reraise = true
+				cpu.raise(cpu.SMALL_RAISE_AMOUNT)
 		else:
-			game.fold(Game.Side.CPU)
+			var should_fold = randi_range(0, 1) == 0
+			if should_fold:
+				game.fold(Game.Side.CPU)
+			else:
+				var should_play_bad_hand = randi_range(0, 3) == 0
+				if should_play_bad_hand:
+					cpu.did_reraise = true
+					cpu.raise(cpu.SMALL_RAISE_AMOUNT)
+				else:
+					cpu.call_bet()
 	else:
 		var best_hand_type = best_hand.hand_type
 		if cpu.VERY_STRONG_HAND_TYPES.has(best_hand_type):
