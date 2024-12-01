@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://dinudypi4i4kl"]
+[gd_scene load_steps=7 format=3 uid="uid://dinudypi4i4kl"]
 
 [ext_resource type="Script" path="res://scripts/Start.gd" id="1_40krv"]
 [ext_resource type="Texture2D" uid="uid://cafhwcd7m5ih6" path="res://sprites/backgrounds/background.png" id="1_uk7it"]
 [ext_resource type="Texture2D" uid="uid://c8bwqsa5niuet" path="res://sprites/backgrounds/table.png" id="2_dfal3"]
 [ext_resource type="Texture2D" uid="uid://brobn1dj0l2oo" path="res://sprites/backgrounds/title.png" id="2_mb6nu"]
+[ext_resource type="Script" path="res://scripts/FaceAnim.gd" id="3_1yow5"]
 [ext_resource type="Script" path="res://scripts/FlashLabel.gd" id="4_otyp6"]
 
 [node name="Start" type="Node2D"]
@@ -43,5 +44,7 @@ script = ExtResource("4_otyp6")
 top_level = true
 position = Vector2(2.08165e-12, 2.08165e-12)
 texture = ExtResource("2_mb6nu")
+script = ExtResource("3_1yow5")
+amplitude = 5.0
 
 [node name="Camera2D" type="Camera2D" parent="."]

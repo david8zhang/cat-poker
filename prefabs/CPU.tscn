@@ -1,10 +1,12 @@
-[gd_scene load_steps=9 format=3 uid="uid://cfv4qj050cb5i"]
+[gd_scene load_steps=11 format=3 uid="uid://cfv4qj050cb5i"]
 
 [ext_resource type="Script" path="res://scripts/CPUCardPlayer.gd" id="1_wxyct"]
 [ext_resource type="Texture2D" uid="uid://cpti6tolcpbh6" path="res://sprites/tail_reactions/easy/tail_neutral.png" id="2_bii2s"]
 [ext_resource type="Texture2D" uid="uid://b3gpb17px5nsu" path="res://sprites/face_reactions/easy/body.png" id="3_oew4b"]
+[ext_resource type="Script" path="res://scripts/TailAnim.gd" id="3_ucqlm"]
 [ext_resource type="Texture2D" uid="uid://cvkyfb011kf6n" path="res://sprites/face_reactions/easy/face_neutral.png" id="4_tq7ud"]
 [ext_resource type="Script" path="res://scripts/DecisionMakerSelector.gd" id="5_5s3gj"]
+[ext_resource type="Script" path="res://scripts/FaceAnim.gd" id="5_n0xnq"]
 [ext_resource type="Script" path="res://scripts/cpu_decisions/EasyCPUDecisionMaker.gd" id="6_wke4q"]
 [ext_resource type="Script" path="res://scripts/cpu_decisions/MediumCPUDecisionMaker.gd" id="7_o1xxr"]
 [ext_resource type="Script" path="res://scripts/cpu_decisions/HardCPUDecisionMaker.gd" id="8_6cfse"]
@@ -13,13 +15,17 @@
 script = ExtResource("1_wxyct")
 
 [node name="Tail" type="Sprite2D" parent="."]
+position = Vector2(30, 2.08165e-12)
 texture = ExtResource("2_bii2s")
+offset = Vector2(2.08165e-12, 2.08165e-12)
+script = ExtResource("3_ucqlm")
 
 [node name="Body" type="Sprite2D" parent="."]
 texture = ExtResource("3_oew4b")
 
 [node name="Face" type="Sprite2D" parent="."]
 texture = ExtResource("4_tq7ud")
+script = ExtResource("5_n0xnq")
 
 [node name="DecisionMakerSelector" type="Node" parent="."]
 script = ExtResource("5_5s3gj")

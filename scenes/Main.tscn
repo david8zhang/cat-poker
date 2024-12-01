@@ -1,10 +1,14 @@
-[gd_scene load_steps=7 format=3 uid="uid://ceesvpsrqfvfu"]
+[gd_scene load_steps=11 format=3 uid="uid://ceesvpsrqfvfu"]
 
 [ext_resource type="Script" path="res://scripts/Game.gd" id="1_ddqca"]
 [ext_resource type="PackedScene" uid="uid://xs87hn7rxkh5" path="res://prefabs/Player.tscn" id="2_5ghjy"]
 [ext_resource type="PackedScene" uid="uid://c60wlqcbrkrbo" path="res://prefabs/Card.tscn" id="2_bq42j"]
 [ext_resource type="PackedScene" uid="uid://cfv4qj050cb5i" path="res://prefabs/CPU.tscn" id="3_nuusr"]
 [ext_resource type="Texture2D" uid="uid://cafhwcd7m5ih6" path="res://sprites/backgrounds/background.png" id="5_d6hhe"]
+[ext_resource type="Script" path="res://scripts/ShowdownResult.gd" id="6_k5jh3"]
+[ext_resource type="Script" path="res://scripts/FlashLabel.gd" id="6_lr7c5"]
+[ext_resource type="Texture2D" uid="uid://b6lord43mmhx4" path="res://sprites/backgrounds/win_hand.png" id="6_sfc6u"]
+[ext_resource type="Texture2D" uid="uid://fr3yugebagdr" path="res://sprites/cards/card_back.png" id="8_6nnuk"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_2ypc2"]
 load_path = "res://.godot/imported/table.png-6b8953174bea532761bb9f919e6a95a8.ctex"
@@ -211,6 +215,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("6_k5jh3")
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer/ShowdownResult"]
 layout_mode = 1
@@ -222,90 +227,149 @@ grow_vertical = 2
 color = Color(0, 0, 0, 0.588235)
 metadata/_edit_use_anchors_ = true
 
-[node name="WinLabel" type="Label" parent="CanvasLayer/ShowdownResult"]
+[node name="Label" type="RichTextLabel" parent="CanvasLayer/ShowdownResult"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -11.5
-offset_right = 20.0
-offset_bottom = 11.5
+offset_left = -141.0
+offset_top = -118.0
+offset_right = 143.0
+offset_bottom = -90.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "Player Wins!
-Hand: Straight
-Winnings: $100"
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/normal_font_size = 25
+theme_override_font_sizes/italics_font_size = 15
+bbcode_enabled = true
+text = "[center][i]Press any key to continue[i][center]"
+fit_content = true
+script = ExtResource("6_lr7c5")
+
+[node name="ResultLabel" type="Label" parent="CanvasLayer/ShowdownResult"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -250.0
+offset_top = 141.0
+offset_right = 250.0
+offset_bottom = 193.0
+grow_horizontal = 2
+text = "Hand: Straight
+Winnings: $44"
 horizontal_alignment = 1
 
-[node name="NextButton" type="Button" parent="CanvasLayer/ShowdownResult"]
+[node name="ResultSprite" type="TextureRect" parent="CanvasLayer/ShowdownResult"]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 5
 anchor_left = 0.5
-anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -22.5
-offset_top = 56.5
-offset_right = 22.5
-offset_bottom = 87.5
+offset_left = -125.0
+offset_top = 33.0
+offset_right = 125.0
+offset_bottom = 133.0
 grow_horizontal = 2
-grow_vertical = 2
-text = "Next
-"
+texture = ExtResource("6_sfc6u")
 
-[node name="GameOverModal" type="Control" parent="CanvasLayer"]
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="CPUHand" type="Control" parent="CanvasLayer/ShowdownResult"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer/GameOverModal"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 1)
-metadata/_edit_use_anchors_ = true
+[node name="LeftCard" type="TextureRect" parent="CanvasLayer/ShowdownResult/CPUHand"]
+layout_mode = 0
+offset_left = 468.0
+offset_top = 245.0
+offset_right = 532.0
+offset_bottom = 309.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
 
-[node name="WinLabel" type="Label" parent="CanvasLayer/GameOverModal"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -11.5
-offset_right = 20.0
-offset_bottom = 11.5
-grow_horizontal = 2
-grow_vertical = 2
-text = "Player wins!"
-horizontal_alignment = 1
+[node name="RightCard" type="TextureRect" parent="CanvasLayer/ShowdownResult/CPUHand"]
+layout_mode = 0
+offset_left = 556.0
+offset_top = 245.0
+offset_right = 620.0
+offset_bottom = 309.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
 
-[node name="PlayAgainButton" type="Button" parent="CanvasLayer/GameOverModal"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -22.5
-offset_top = 22.5
-offset_right = 22.5
-offset_bottom = 53.5
-grow_horizontal = 2
-grow_vertical = 2
-text = "Play Again
-"
+[node name="PlayerHand" type="Control" parent="CanvasLayer/ShowdownResult"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="LeftCard" type="TextureRect" parent="CanvasLayer/ShowdownResult/PlayerHand"]
+layout_mode = 0
+offset_left = 468.0
+offset_top = 539.0
+offset_right = 532.0
+offset_bottom = 603.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
+
+[node name="RightCard" type="TextureRect" parent="CanvasLayer/ShowdownResult/PlayerHand"]
+layout_mode = 0
+offset_left = 557.0
+offset_top = 539.0
+offset_right = 621.0
+offset_bottom = 603.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
+
+[node name="CommunityCards" type="Control" parent="CanvasLayer/ShowdownResult"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Card" type="TextureRect" parent="CanvasLayer/ShowdownResult/CommunityCards"]
+layout_mode = 0
+offset_left = 337.0
+offset_top = 409.0
+offset_right = 401.0
+offset_bottom = 473.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
+
+[node name="Card2" type="TextureRect" parent="CanvasLayer/ShowdownResult/CommunityCards"]
+layout_mode = 0
+offset_left = 426.0
+offset_top = 409.0
+offset_right = 490.0
+offset_bottom = 473.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
+
+[node name="Card3" type="TextureRect" parent="CanvasLayer/ShowdownResult/CommunityCards"]
+layout_mode = 0
+offset_left = 515.0
+offset_top = 409.0
+offset_right = 579.0
+offset_bottom = 473.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
+
+[node name="Card4" type="TextureRect" parent="CanvasLayer/ShowdownResult/CommunityCards"]
+layout_mode = 0
+offset_left = 604.0
+offset_top = 409.0
+offset_right = 668.0
+offset_bottom = 473.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
+
+[node name="Card5" type="TextureRect" parent="CanvasLayer/ShowdownResult/CommunityCards"]
+layout_mode = 0
+offset_left = 693.0
+offset_top = 409.0
+offset_right = 757.0
+offset_bottom = 473.0
+scale = Vector2(2, 2)
+texture = ExtResource("8_6nnuk")
 
 [connection signal="button_up" from="CanvasLayer/PlayerActionButtons/Check" to="Player" method="_on_check_button_up"]
 [connection signal="pressed" from="CanvasLayer/PlayerActionButtons/Call" to="Player" method="_on_call_pressed"]

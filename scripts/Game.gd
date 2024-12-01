@@ -61,14 +61,8 @@ var hand_type_names = [
 @onready var cpu_reaction_label = get_node("/root/Game/CanvasLayer/CPUReaction") as Label
 
 # Showdown modal text
-@onready var showdown_result = get_node("/root/Game/CanvasLayer/ShowdownResult") as Control
-@onready var showdown_win_label = get_node("/root/Game/CanvasLayer/ShowdownResult/WinLabel") as Label
-@onready var showdown_next_button = get_node("/root/Game/CanvasLayer/ShowdownResult/NextButton") as Button
-
-# Game Over modal
-@onready var game_over_modal = get_node("/root/Game/CanvasLayer/GameOverModal") as Control
-@onready var game_over_label = get_node("/root/Game/CanvasLayer/GameOverModal/WinLabel") as Label
-@onready var game_over_restart_button = get_node("/root/Game/CanvasLayer/GameOverModal/PlayAgainButton") as Button
+@onready var showdown_result = get_node("/root/Game/CanvasLayer/ShowdownResult") as ShowdownResult
+@onready var showdown_win_label = get_node("/root/Game/CanvasLayer/ShowdownResult/ResultLabel") as Label
 
 # Player action buttons
 @onready var player_action_buttons = get_node("/root/Game/CanvasLayer/PlayerActionButtons") as HBoxContainer
@@ -97,6 +91,7 @@ var did_player_check = false
 var did_cpu_check = false
 var is_player_all_in = false
 var is_cpu_all_in = false
+var is_showdown_result = false
 var hand_winner: Game.Side = Side.NONE
 var big_blind_side = -1
 
@@ -122,8 +117,6 @@ func _ready():
 	# connect signals
 	player.bet.connect(on_player_bet)
 	cpu.bet.connect(on_cpu_bet)
-	showdown_next_button.button_up.connect(start_new_hand)
-	game_over_restart_button.pressed.connect(new_game)
 	action_log.hide()
 
 	# Initialize players
@@ -425,9 +418,6 @@ func start_new_hand():
 		go_to_next_cpu()
 	reset_game_state()
 
-func new_game():
-	get_tree().reload_current_scene()
-
 func reset_game_state():
 	pot = 0
 	pot_label.text = "Pot: $0"
@@ -463,16 +453,21 @@ func check_winner():
 	var cpu_hand = get_best_hand_comm_cards(cpu.cards_in_hand, curr_community_cards)
 	var compare_result = compare_hands(player_hand, cpu_hand)
 	if compare_result == 1:
-		showdown_win_label.text = "Player Wins!\nHand: " + hand_type_names[player_hand.hand_type] + "\nWinnings: $" + str(pot)
+		showdown_result.display_winning_hand(player_hand)
+		showdown_win_label.text = "Hand: " + hand_type_names[player_hand.hand_type] + "\nWinnings: $" + str(pot)
 		hand_winner = Side.PLAYER
 		cpu.lose_reaction()
 	elif compare_result == -1:
-		showdown_win_label.text = "CPU Wins!\nHand: " + hand_type_names[cpu_hand.hand_type]
+		showdown_result.display_winning_hand(cpu_hand)
+		showdown_win_label.text = "Hand: " + hand_type_names[cpu_hand.hand_type]
 		hand_winner = Side.CPU
 		cpu.win_reaction()
 	else:
-		showdown_win_label.text = "Tie!\nWinnings:" + str(pot / 2)
+		showdown_win_label.text = "Winnings:" + str(pot / 2)
 		hand_winner = Side.BOTH
+	showdown_result.show_result(hand_winner)
+	is_showdown_result = true
+
 
 # Get the best hand between hole cards and community cards
 func get_best_hand_comm_cards(player_cards, community_cards):
@@ -689,15 +684,26 @@ func fold(side: Game.Side, message = null):
 	cpu_reaction_label.hide()
 	pot += curr_player_bet + curr_cpu_bet
 	showdown_result.show()
+	# No winning hand if one side folds
+	showdown_result.hide_winning_hand() 
 	if side == Game.Side.PLAYER:
+		showdown_result.show_result(Game.Side.CPU)
 		if message != null:
 			showdown_win_label.text = message
 		else:
 			showdown_win_label.text = "Player folded...\nCPU Wins!"
 		hand_winner = Side.CPU
 	elif side == Game.Side.CPU:
+		showdown_result.show_result(Game.Side.PLAYER)
 		if message != null:
 			showdown_win_label.text = message
 		else:
 			showdown_win_label.text = "CPU folded...\nPlayer wins!"
 		hand_winner = Side.PLAYER
+	is_showdown_result = true
+
+func _unhandled_key_input(event):
+	if event.is_pressed() and is_showdown_result:
+			is_showdown_result = false
+			showdown_result.hide()
+			start_new_hand()

@@ -1,14 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://lku2lqqomke2"]
+[gd_scene load_steps=5 format=3 uid="uid://lku2lqqomke2"]
 
-[ext_resource type="Texture2D" uid="uid://7mq8hujaorvc" path="res://sprites/backgrounds/gameover.png" id="1_e2ipq"]
 [ext_resource type="Script" path="res://scripts/EndScreen.gd" id="1_yw5kd"]
+[ext_resource type="Texture2D" uid="uid://dakxwvybpqgof" path="res://sprites/backgrounds/defeat_screen.png" id="2_ggoyf"]
+[ext_resource type="Script" path="res://scripts/FlashLabel.gd" id="3_i7ovs"]
+[ext_resource type="Texture2D" uid="uid://6hdv4dgolyou" path="res://sprites/backgrounds/defeat.png" id="4_gdoqo"]
 
-[node name="GameOver" type="Node2D" node_paths=PackedStringArray("play_again_button")]
+[node name="GameOver" type="Node2D"]
 script = ExtResource("1_yw5kd")
-play_again_button = NodePath("CanvasLayer/Button")
 
 [node name="Background" type="Sprite2D" parent="."]
-texture = ExtResource("1_e2ipq")
+texture = ExtResource("2_ggoyf")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -21,36 +22,40 @@ grow_vertical = 2
 color = Color(0, 0, 0, 0.588235)
 metadata/_edit_use_anchors_ = true
 
-[node name="Button" type="Button" parent="CanvasLayer"]
+[node name="PlayAgain" type="RichTextLabel" parent="CanvasLayer"]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -87.0
-offset_top = 52.5
-offset_right = 87.0
-offset_bottom = 83.5
-grow_horizontal = 2
-grow_vertical = 2
-text = "Play Again"
-
-[node name="Label" type="Label" parent="CanvasLayer"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -37.0
-offset_top = -13.0
-offset_right = 37.0
-offset_bottom = 13.0
+offset_left = -144.0
+offset_top = 48.0
+offset_right = 140.0
+offset_bottom = 76.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 72
-text = "You lost..."
-horizontal_alignment = 1
+theme_override_font_sizes/normal_font_size = 30
+theme_override_font_sizes/italics_font_size = 20
+bbcode_enabled = true
+text = "[center][i]Press any key to play again[i][center]"
+fit_content = true
+script = ExtResource("3_i7ovs")
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -310.5
+offset_top = -131.0
+offset_right = 310.5
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+texture = ExtResource("4_gdoqo")
 
 [node name="Camera2D" type="Camera2D" parent="."]
