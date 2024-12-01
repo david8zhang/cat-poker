@@ -59,6 +59,12 @@ var hand_type_names = [
 @onready var action_log = get_node("/root/Game/CanvasLayer/ActionLogSection") as Panel
 @onready var action_log_label = get_node("/root/Game/CanvasLayer/ActionLogSection/ActionLog") as Label
 @onready var cpu_reaction_label = get_node("/root/Game/CanvasLayer/CPUReaction") as Label
+@onready var bet_sfx = $Bet as AudioStreamPlayer2D
+@onready var fold_sfx = $Fold as AudioStreamPlayer2D
+@onready var deal_sfx = $Deal as AudioStreamPlayer2D
+@onready var win_sfx = $Win as AudioStreamPlayer2D
+@onready var lose_sfx = $Lose as AudioStreamPlayer2D
+@onready var check_sfx = $Check as AudioStreamPlayer2D
 
 # Showdown modal text
 @onready var showdown_result = get_node("/root/Game/CanvasLayer/ShowdownResult") as ShowdownResult
@@ -189,12 +195,14 @@ func handle_blind_bets(complete_cb):
 		add_child(timer)
 
 func big_blind_bet():
+	bet_sfx.play()
 	if big_blind_side == Side.PLAYER:
 		player.blind_bet(2)
 	if big_blind_side == Side.CPU:
 		cpu.blind_bet(2)
 
 func small_blind_bet(complete_cb):
+	bet_sfx.play()
 	if big_blind_side == Side.PLAYER:
 		cpu.blind_bet(1)
 	if big_blind_side == Side.CPU:
@@ -209,6 +217,7 @@ func small_blind_bet(complete_cb):
 	add_child(timer)
 
 func deal_cards_on_table(num_cards):
+	deal_sfx.play()
 	var card_pos_y = 150
 	var card_pos = Vector2(next_card_x_pos, card_pos_y)
 	var flop_cards = draw_cards_from_deck(num_cards)
@@ -278,6 +287,7 @@ func on_player_bet(amount, bet_type):
 	player_chip_count.text = "Player: $" + str(player.curr_bankroll)
 	match bet_type:
 		BetType.CHECK:
+			check_sfx.play()
 			action_log_label.text = "Player checks"
 			if did_cpu_check:
 				go_to_next_phase_with_delay(1)
@@ -285,14 +295,17 @@ func on_player_bet(amount, bet_type):
 				did_player_check = true
 				process_next_action(Game.Side.CPU)
 		BetType.RAISE:
+			bet_sfx.play()
 			action_log_label.text = "Player raises $" + str(curr_player_bet)
 			process_next_action(Game.Side.CPU)
 		BetType.CALL:
+			bet_sfx.play()
 			action_log_label.text = "Player calls $" + str(curr_player_bet)
 			if is_cpu_all_in:
 				cpu.display_hand()
 			go_to_next_phase_with_delay(1)
 		BetType.ALL_IN:
+			bet_sfx.play()
 			action_log_label.text = "Player All In!"
 			is_player_all_in = true
 			if is_cpu_all_in or curr_player_bet <= curr_cpu_bet:
@@ -309,6 +322,7 @@ func on_cpu_bet(amount, bet_type):
 	cpu_chip_count.text = "CPU: $" + str(cpu.curr_bankroll)
 	match bet_type:
 		BetType.CHECK:
+			check_sfx.play()
 			action_log_label.text = "CPU checks"
 			if did_player_check:
 				go_to_next_phase_with_delay(1)
@@ -316,14 +330,17 @@ func on_cpu_bet(amount, bet_type):
 				did_cpu_check = true
 				process_next_action(Game.Side.PLAYER)
 		BetType.RAISE:
+			bet_sfx.play()
 			action_log_label.text = "CPU raises $" + str(curr_cpu_bet)
 			process_next_action(Game.Side.PLAYER)
 		BetType.CALL:
+			bet_sfx.play()
 			action_log_label.text = "CPU calls $" + str(curr_cpu_bet)
 			if is_player_all_in:
 				cpu.display_hand()
 			go_to_next_phase_with_delay(1)
 		BetType.ALL_IN:
+			bet_sfx.play()
 			action_log_label.text = "CPU All In!"
 			is_cpu_all_in = true
 			if is_player_all_in or curr_cpu_bet <= curr_player_bet:
@@ -453,17 +470,20 @@ func check_winner():
 	var cpu_hand = get_best_hand_comm_cards(cpu.cards_in_hand, curr_community_cards)
 	var compare_result = compare_hands(player_hand, cpu_hand)
 	if compare_result == 1:
+		win_sfx.play()
 		showdown_result.display_winning_hand(player_hand)
 		showdown_win_label.text = "Hand: " + hand_type_names[player_hand.hand_type] + "\nWinnings: $" + str(pot)
 		hand_winner = Side.PLAYER
 		cpu.lose_reaction()
 	elif compare_result == -1:
+		lose_sfx.play()
 		showdown_result.display_winning_hand(cpu_hand)
 		showdown_win_label.text = "Hand: " + hand_type_names[cpu_hand.hand_type]
 		hand_winner = Side.CPU
 		cpu.win_reaction()
 	else:
-		showdown_win_label.text = "Winnings:" + str(pot / 2)
+		showdown_result.hide_winning_hand()
+		showdown_win_label.text = "Winnings: $" + str(pot / 2)
 		hand_winner = Side.BOTH
 	showdown_result.show_result(hand_winner)
 	is_showdown_result = true
@@ -681,6 +701,7 @@ func _combination_helper(arr: Array, combination_size: int, start: int, current:
 		current.pop_back()
 
 func fold(side: Game.Side, message = null):
+	fold_sfx.play()
 	cpu_reaction_label.hide()
 	pot += curr_player_bet + curr_cpu_bet
 	showdown_result.show()

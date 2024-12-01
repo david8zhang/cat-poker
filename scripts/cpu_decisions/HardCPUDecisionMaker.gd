@@ -95,12 +95,15 @@ func respond_to_raise(best_hand, is_pre_flop):
 	else:
 		var best_hand_type = best_hand.hand_type
 		if cpu.VERY_STRONG_HAND_TYPES.has(best_hand_type):
+			cpu.did_reraise = true
 			cpu.make_bet(cpu.curr_bankroll, Game.BetType.ALL_IN)
 		elif cpu.STRONG_HAND_TYPES.has(best_hand_type):
+			cpu.did_reraise = true
 			cpu.raise(cpu.BIG_RAISE_AMOUNT)
 		elif cpu.DECENT_HAND_TYPES.has(best_hand_type) or \
 			cpu.is_straight_draw_for_phase(game.curr_phase) or \
 			cpu.is_flush_draw_for_phase(game.curr_phase):
+			cpu.did_reraise = true
 			cpu.raise(cpu.SMALL_RAISE_AMOUNT)
 		else:
 			# Fold at different rates depending on phase

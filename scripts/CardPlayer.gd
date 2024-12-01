@@ -36,6 +36,7 @@ enum HoleCardType {
 signal bet(amount, bet_type)
 
 func get_cards(cards, relative_pos = Vector2(0, 0)):
+	game.deal_sfx.play()
 	var curr_pos = relative_pos
 	for card in cards:
 		var new_card = card_scene.instantiate() as Card
